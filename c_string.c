@@ -307,45 +307,29 @@ String_Array_T SplitStr(String_T *orginal_str, const char *separator, int max_sp
         result.data_set = malloc(result.size * sizeof(String_T));
         allocated_mem += (result.size * sizeof(String_T));
         result.data_set[0] = InitStr(orginal_str->data);
-        AppendStr(&result.data_set[0], "");
     
         return result;
     }
 
     int i = 0;
-    int j = 0;
-    int separator_size = strlen(separator);
+    int total_len = 0;
 
-    const char *str_data = orginal_str->data;
-    char split_string[num_of_occurrences+1][orginal_str->size+1];
-
-    while (*str_data != '\0')
-    {
-        if (i < num_of_occurrences && CheckSubStr(str_data, separator))
-        {
-            str_data += separator_size;
-            split_string[i][j] = '\0';
-            i++;
-            j = 0;
-            continue;
-        }
-
-        split_string[i][j] = *str_data;
-        j++;
-        str_data++;
-    }
-
-    split_string[i][j] = '\0';
+    const char *split_str = "";
+    char *str_value = strdup(orginal_str->data);
 
     result.size = num_of_occurrences + 1;
     result.data_set = malloc(result.size * sizeof(String_T));
     allocated_mem += (result.size * sizeof(String_T));
 
-    for (int k = 0; k < result.size; k++)
+    while ((split_str = strsep(&str_value, separator)) != NULL && i < num_of_occurrences)
     {
-        result.data_set[k] = InitStr(&split_string[k][0]);
-        AppendStr(&result.data_set[k], "");
+        result.data_set[i] = InitStr(split_str);
+
+        total_len += strlen(split_str);
+        i++;
     }
+
+    result.data_set[i] = InitStr(orginal_str->data + total_len + (num_of_occurrences * strlen(separator)));
 
     return result;
 }
