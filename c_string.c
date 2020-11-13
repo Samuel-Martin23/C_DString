@@ -247,16 +247,17 @@ void ReplaceStr(String_T *orginal_str, const char *old_str, const char *new_str,
     *orginal_str = result;
 }
 
-void EraseStrIndex(String_T *orginal_str, int low_range, int high_range)
-{
-    String_T result = SubStrIndex(orginal_str, low_range, high_range);
-    ReplaceStr(orginal_str, result.data, "", 0);
-    FreeStr(&result);
-}
 
 void EraseStrValue(String_T *orginal_str, const char *value)
 {
     ReplaceStr(orginal_str, value, "", 0);
+}
+
+void EraseStrIndex(String_T *orginal_str, int low_range, int high_range)
+{
+    String_T result = SubStrIndex(orginal_str, low_range, high_range);
+    EraseStrValue(orginal_str, result.data);
+    FreeStr(&result);
 }
 
 void StripStr(String_T *orginal_str)
@@ -291,9 +292,9 @@ void StripStr(String_T *orginal_str)
     
     FreeStr(orginal_str);
 
-    orginal_str->check_allocation = true;
     orginal_str->size = strlen(result);
     orginal_str->data = result;
+    orginal_str->check_allocation = true;
 }
 
 String_Array_T SplitStr(String_T *orginal_str, const char *separator, int max_split)
@@ -342,8 +343,7 @@ void PrintStr(String_T orginal_str, const char *beginning, const char *end)
 void PrintStrArray(String_Array_T orginal_str_array, const char *beginning, const char *end)
 {
     int i = 0;
-    printf("%s", beginning);
-    printf("{");
+    printf("%s{", beginning);
 
     for (i = 0; i < (orginal_str_array.size-1); i++)
     {
