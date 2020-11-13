@@ -146,7 +146,7 @@ void AppendStr(String_T *orginal_str, const char *str_value)
     {
         allocated_mem += result.size + 1;
         result.data = malloc(sizeof(char) * (result.size + 1));
-        strcpy((char*)result.data, orginal_str->data);
+        memcpy((char*)result.data, orginal_str->data, orginal_str->size);
         strcat((char*)result.data, str_value);
         result.check_allocation = true;
         *orginal_str = result;
@@ -157,33 +157,19 @@ String_T SubStrIndex(String_T *orginal_str, int low_range, int high_range)
 {
     if (low_range >= high_range || high_range > orginal_str->size)
     {
-        return InitStr("Unknown");
+        return InitStr("");
     }
 
-    int i = 0;
     int total_size = (high_range - low_range) + 1;
-    const char *str_data = orginal_str->data;
-    char individual_chars[total_size];
 
-    String_T result = InitStr("");
+    String_T result;
     allocated_mem += sizeof(char) * total_size;
     result.data = malloc(sizeof(char) * total_size);
+    result.check_allocation = true;
 
-    const char *copy_str_data = result.data;
-
-    for (i = 0; i < low_range; i++)
-    {
-        str_data++;
-    }
-
-    for (i = 0; i < total_size-1; i++)
-    {
-        *(char*)copy_str_data = *str_data;
-        str_data++;
-        copy_str_data++;
-    }
-    
-    *(char*)copy_str_data = '\0';
+    memcpy((char*)result.data, orginal_str->data + low_range, total_size-1);
+    *((char*)result.data + total_size) = '\0';
+    result.size = strlen(result.data);
 
     return result;
 }
@@ -194,37 +180,30 @@ String_T SubStrValue(String_T *orginal_str, const char *value1, const char *valu
 
     if (low == -1)
     {
-        return InitStr("Unknown");
+        return InitStr("");
     }
 
     int high = 0;
     const char *str_value = orginal_str->data;
 
-    for (int i = 0; i < low; i++)
-    {
-        str_value++;
-    }
+    str_value += low;
 
     String_T str_at_low_index = InitStr(str_value);
     high = CountIndexInStr(&str_at_low_index, value2);
 
     if (high == -1)
     {
-        return InitStr("Unknown");
-    }
-    else if (high + 1 == str_at_low_index.size)
-    {
-        
+        return InitStr("");
     }
 
-    return SubStrIndex(&str_at_low_index, 0, high + 1);
+    return SubStrIndex(&str_at_low_index, 0, high + strlen(value2));
 }
 
 void ReplaceStr(String_T *orginal_str, const char *old_str, const char *new_str, int max_split)
 {
     if (max_split == 0)
     {
-        int num_of_occurrences = CountOccurrencesInStr(orginal_str, old_str, 0);
+        int num_of_occurrences = CountOccurrencesInStr(orginal_str, old_str, max_split);
 
         if (num_of_occurrences == -1)
         {
@@ -286,32 +265,39 @@ void EraseStrValue(String_T *orginal_str, const char *value)
 
 void StripStr(String_T *orginal_str)
 {
-    while (*orginal_str->data == ' ' || *orginal_str->data == '\n')
+    const char *str_data = orginal_str->data;
+
+    while (*str_data == ' ' || *str_data == '\n')
     {
-        orginal_str->data++;
-        orginal_str->size--;
+        str_data++;
     }
 
-    if (orginal_str->data == '\0')
+    if (str_data == '\0')
     {
         *orginal_str = InitStr("");
         return;
     }
 
-    if (orginal_str->check_allocation == false)
-    {
-        AppendStr(orginal_str, "");
-    }
-
-    const char *forward = orginal_str->data + orginal_str->size;
+    int size = strlen(str_data);
+    const char *forward = str_data + size;
 
     while (*(forward-1) == ' ' || *(forward-1) == '\n')
     {
         forward--;
-        orginal_str->size--;
+        size--;
     }
 
-    *(char*)forward = '\0';
+    allocated_mem += sizeof(char) * (size + 1);
+
+    const char *result = malloc(sizeof(char) * (size + 1));
+    memcpy((char*)result, str_data, size);
+    *((char*)result + size) = '\0';
+    
+    FreeStr(orginal_str);
+
+    orginal_str->check_allocation = true;
+    orginal_str->size = strlen(result);
+    orginal_str->data = result;
 }
 
 String_Array_T SplitStr(String_T *orginal_str, const char *separator, int max_split)
