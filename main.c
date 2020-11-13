@@ -9,7 +9,7 @@ int main()
     String_T first_name = SubStrValue(&total_name, "S", "l");
     String_T last_name = SubStrIndex(&total_name, 13, 19);
     ReplaceStr(&first_name, "uel", "my", 0);
-    EraseStrValue(&total_name, "Isaac ");
+    EraseStrValue(&total_name, " Isaac");
     String_Array_T split_name = SplitStr(&total_name, " ", 0);
 
     PrintStr(total_name, "", "\n");

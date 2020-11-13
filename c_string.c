@@ -148,6 +148,7 @@ void AppendStr(String_T *orginal_str, const char *str_value)
         result.data = malloc(sizeof(char) * (result.size + 1));
         memcpy((char*)result.data, orginal_str->data, orginal_str->size);
         strcat((char*)result.data, str_value);
+        *((char*)result.data + result.size) = '\0';
         result.check_allocation = true;
         *orginal_str = result;
     }
@@ -201,16 +202,11 @@ String_T SubStrValue(String_T *orginal_str, const char *value1, const char *valu
 
 void ReplaceStr(String_T *orginal_str, const char *old_str, const char *new_str, int max_split)
 {
-    if (max_split == 0)
+    int num_of_occurrences = CountOccurrencesInStr(orginal_str, old_str, max_split);
+
+    if (num_of_occurrences == -1)
     {
-        int num_of_occurrences = CountOccurrencesInStr(orginal_str, old_str, max_split);
-
-        if (num_of_occurrences == -1)
-        {
-            return;
-        }
-
-        max_split = num_of_occurrences;
+        return;
     }
 
     int i = 0;
@@ -219,11 +215,11 @@ void ReplaceStr(String_T *orginal_str, const char *old_str, const char *new_str,
 
     const char *copy_new_str = new_str;
     const char *str_data = orginal_str->data;
-    char individual_chars[orginal_str->size + strlen(new_str) * max_split];
+    char individual_chars[orginal_str->size + strlen(new_str) * num_of_occurrences];
 
     while (*str_data != '\0')
     {
-        if (num_of_replacements < max_split && CheckSubStr(str_data, old_str))
+        if (num_of_replacements < num_of_occurrences && CheckSubStr(str_data, old_str))
         {
             while (*new_str != '\0')
             {
