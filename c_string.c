@@ -98,7 +98,7 @@ int CountIndexInStr(String_T *orginal_str, const char *value)
 
 int CountOccurrencesInStr(String_T *orginal_str, const char *value, int max_split)
 {
-    if (*value == '\0')
+    if (*value == '\0' || max_split < 0)
     {
         return -1;
     }
@@ -131,20 +131,23 @@ int CountOccurrencesInStr(String_T *orginal_str, const char *value, int max_spli
 void AppendStr(String_T *orginal_str, const char *str_value)
 {
     String_T result;
-    result.size = orginal_str->size + strlen(str_value);
-    result.check_allocation = false;
+    int size = strlen(str_value);
+
+    result.size = orginal_str->size + size;
 
     if (orginal_str->check_allocation)
     {
-        allocated_mem += strlen(str_value);
+        allocated_mem += size;
+
         result.data = realloc((char*)orginal_str->data, sizeof(char) * (result.size + 1));
         strcat((char*)result.data, str_value);
         result.check_allocation = true;
         *orginal_str = result;
     }
-    else if (orginal_str->data)
+    else
     {
         allocated_mem += result.size + 1;
+
         result.data = malloc(sizeof(char) * (result.size + 1));
         memcpy((char*)result.data, orginal_str->data, orginal_str->size);
         strcat((char*)result.data, str_value);
@@ -177,6 +180,11 @@ String_T SubStrIndex(String_T *orginal_str, int low_range, int high_range)
 
 String_T SubStrValue(String_T *orginal_str, const char *value1, const char *value2)
 {
+    if (*value1 == '\0' || *value2 == '\0')
+    {
+        return InitStr("");
+    }
+
     int low = CountIndexInStr(orginal_str, value1);
 
     if (low == -1)
@@ -212,7 +220,7 @@ void ReplaceStr(String_T *orginal_str, const char *old_str, const char *new_str,
     int i = 0;
     int num_of_replacements = 0;
     int old_str_size = strlen(old_str);
-    int total_size = ((orginal_str->size - old_str_size) + (strlen(new_str) * num_of_occurrences) + 1);
+    int total_size = ((orginal_str->size - (old_str_size * num_of_occurrences)) + (strlen(new_str) * num_of_occurrences) + 1);
 
     allocated_mem += sizeof(char) * total_size;
 
