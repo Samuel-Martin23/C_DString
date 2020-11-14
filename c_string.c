@@ -220,13 +220,13 @@ void ReplaceStr(String_T *orginal_str, const char *old_str, const char *new_str,
     int i = 0;
     int num_of_replacements = 0;
     int old_str_size = strlen(old_str);
-    int total_size = ((orginal_str->size - (old_str_size * num_of_occurrences)) + (strlen(new_str) * num_of_occurrences) + 1);
+    int total_size = ((orginal_str->size - (old_str_size * num_of_occurrences)) + (strlen(new_str) * num_of_occurrences));
 
-    allocated_mem += sizeof(char) * total_size;
+    allocated_mem += sizeof(char) * (total_size + 1);
 
     const char *copy_new_str = new_str;
     const char *str_data = orginal_str->data;
-    const char *replace_str = malloc(sizeof(char) * total_size);
+    const char *replace_str = malloc(sizeof(char) * (total_size + 1));
 
     while (*str_data != '\0')
     {
@@ -252,10 +252,11 @@ void ReplaceStr(String_T *orginal_str, const char *old_str, const char *new_str,
 
     *((char*)replace_str + i) = '\0';
 
-    String_T result = InitStr(replace_str);
-    result.check_allocation = true;
     FreeStr(orginal_str);
-    *orginal_str = result;
+
+    orginal_str->size = total_size;
+    orginal_str->data = replace_str;
+    orginal_str->check_allocation = true;
 }
 
 
@@ -303,7 +304,7 @@ void StripStr(String_T *orginal_str)
     
     FreeStr(orginal_str);
 
-    orginal_str->size = strlen(result);
+    orginal_str->size = size;
     orginal_str->data = result;
     orginal_str->check_allocation = true;
 }
