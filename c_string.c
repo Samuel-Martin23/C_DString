@@ -319,6 +319,7 @@ String_Array_T SplitStr(String_T *orginal_str, const char *separator, int max_sp
         result.data_set = malloc(result.size * sizeof(String_T));
         allocated_mem += (result.size * sizeof(String_T));
         result.data_set[0] = InitStr(orginal_str->data);
+        AppendStr(&result.data_set[0], "");
     
         return result;
     }
@@ -336,12 +337,14 @@ String_Array_T SplitStr(String_T *orginal_str, const char *separator, int max_sp
     while ((split_str = strsep(&str_value, separator)) != NULL && i < num_of_occurrences)
     {
         result.data_set[i] = InitStr(split_str);
+        AppendStr(&result.data_set[i], "");
 
-        total_len += strlen(split_str);
+        total_len += result.data_set[i].size;
         i++;
     }
 
     result.data_set[i] = InitStr(orginal_str->data + total_len + (num_of_occurrences * strlen(separator)));
+    AppendStr(&result.data_set[i], "");
 
     return result;
 }
