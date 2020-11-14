@@ -212,10 +212,13 @@ void ReplaceStr(String_T *orginal_str, const char *old_str, const char *new_str,
     int i = 0;
     int num_of_replacements = 0;
     int old_str_size = strlen(old_str);
+    int total_size = ((orginal_str->size - old_str_size) + (strlen(new_str) * num_of_occurrences) + 1);
+
+    allocated_mem += sizeof(char) * total_size;
 
     const char *copy_new_str = new_str;
     const char *str_data = orginal_str->data;
-    char individual_chars[orginal_str->size + strlen(new_str) * num_of_occurrences];
+    const char *replace_str = malloc(sizeof(char) * total_size);
 
     while (*str_data != '\0')
     {
@@ -223,7 +226,7 @@ void ReplaceStr(String_T *orginal_str, const char *old_str, const char *new_str,
         {
             while (*new_str != '\0')
             {
-                individual_chars[i] = *new_str;
+                *((char*)replace_str + i) = *new_str;
                 i++;
                 new_str++;
             }
@@ -234,15 +237,15 @@ void ReplaceStr(String_T *orginal_str, const char *old_str, const char *new_str,
             continue;
         }
 
-        individual_chars[i] = *str_data;
+        *((char*)replace_str + i) = *str_data;
         i++;
         str_data++;
     }
 
-    individual_chars[i] = '\0';
+    *((char*)replace_str + i) = '\0';
 
-    String_T result = InitStr(&individual_chars[0]);
-    AppendStr(&result, "");
+    String_T result = InitStr(replace_str);
+    result.check_allocation = true;
     FreeStr(orginal_str);
     *orginal_str = result;
 }
