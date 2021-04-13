@@ -1,28 +1,25 @@
-
-#include "c_string.c"
+#include "c_string.h"
 
 int main()
 {
-    String_T total_name = InitStr("\n    Samuel");
-    AppendStr(&total_name, " Isaac Martin   \n");
-    StripStr(&total_name);
-    String_T first_name = SubStrValue(&total_name, "S", "l");
-    String_T last_name = SubStrIndex(&total_name, 13, 19);
-    ReplaceStr(&first_name, "uel", "my", 0);
-    EraseStrValue(&total_name, " Isaac");
-    String_Array_T split_name = SplitStr(&total_name, " ", 0);
+    string_t *last_name = NULL;
+    string_t *full_name = NULL;
+    string_array_t *split_name = NULL;
 
-    PrintStr(total_name, "", "\n");
-    PrintStr(first_name, "", "\n");
-    PrintStr(last_name, "", "\n");
-    PrintStrArray(split_name, "", "\n");
+    init_str(&full_name, "  \nSamuel\n  ");
 
-    FreeStr(&total_name);
-    FreeStr(&first_name);
-    FreeStr(&last_name);
-    FreeStrArray(&split_name);
+    strip_str(full_name);
+    strip_str_chars(full_name, "\n");
+    append_str(full_name, " Martin");
 
-    PrintAllocatedMemory();
+    sub_str(&last_name, full_name, 7, 0, 1);
+
+    erase_str(full_name, "tin");
+    split_str(&split_name, full_name, "a", 0);
+
+    free_str(&last_name);
+    free_str(&full_name);
+    free_str_array(&split_name);
 
     return 0;
 }

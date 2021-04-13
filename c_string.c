@@ -1,90 +1,402 @@
+#include "c_string.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <strings.h>
+#define STR_NULL                    0x00000001u
+#define STR_ALLOC                   0x00000002u
+#define TURN_OFF_WARNING            0x00000004u
 
-typedef enum boolean {false, true} bool;
+#define PURPLE                      "\033[1;95m"
+#define RED                         "\033[1;91m"
+#define WHITE                       "\033[1;97m"
+#define RESET                       "\033[0m"
 
-typedef struct String
+typedef struct string
 {
     int size;
-    const char *data;
-    bool check_allocation;
-} String_T;
+    char *data;
+} string_t;
 
-typedef struct String_Array
+typedef struct string_array
 {
     int size;
-    String_T *data_set;
-} String_Array_T;
+    string_t **data_set;
+} string_array_t;
 
-int allocated_mem = 0;
-
-String_T InitStr(const char *str_literal)
+static bool check_warnings(string_t *str, u_int16_t warning_code, const char *function_name)
 {
-    String_T curr_str;
-    curr_str.size = strlen(str_literal);
-    curr_str.data = str_literal;
-    curr_str.check_allocation = false;
-    return curr_str;
+    if (warning_code & STR_NULL)
+    {
+        if (str == NULL)
+        {
+            if (!(warning_code & TURN_OFF_WARNING))
+            {
+                printf("%s: %swarning:%s string is NULL%s\n", function_name, PURPLE, WHITE, RESET);
+            }
+
+            return true;
+        }
+    }
+
+    if (warning_code & STR_ALLOC)
+    {
+        if (str != NULL)
+        {
+            if (!(warning_code & TURN_OFF_WARNING))
+            {
+                printf("%s: %serror:%s string is not NULL%s\n", function_name, RED, WHITE, RESET);
+                exit(1);
+            }
+        }
+    }
+
+    return false;
 }
 
-void FreeStr(String_T *orginal_str)
+static bool check_ranges(int *start, int *end, int size, const char *function_name)
 {
-    if (orginal_str->check_allocation == false)
+    if (*start >= size || *end >= size)
+    {
+        printf("%s: %swarning:%s indices are out of range%s\n", function_name, PURPLE, WHITE, RESET);
+        return true;
+    }
+
+    if (*start < 0)
+    {
+        *start += size;
+    }
+
+    if (*end == 0)
+    {
+        *end = size;
+    }
+    else if (*end < 0)
+    {
+        *end += size;
+    }
+
+    if (*start < 0 || *end > size || (*end - *start) <= 0)
+    {
+        printf("%s: %swarning:%s indices are out of range%s\n", function_name, PURPLE, WHITE, RESET);
+        return true;
+    }
+
+    return false;
+}
+
+static bool check_str_occurrences(char *characters, char value)
+{
+    if (value == '\0')
+    {
+        return false;
+    }
+
+    while (*characters != '\0')
+    {
+        if (*characters == value)
+        {
+            return true;
+        }
+
+        characters++;
+    }
+
+    return false;
+}
+
+static void str_array_null_init(string_array_t *str_array)
+{
+    for (int i = 0; i < str_array->size; i++)
+    {
+        str_array->data_set[i] = NULL;
+    }
+}
+
+static int count_occurrences_in_str(string_t *str, const char *value, int count)
+{
+    if (*value == '\0' || count < 0)
+    {
+        return -1;
+    }
+
+    int occurrences = 0;
+    const char *str_data = str->data;
+
+    while (*str_data != '\0')
+    {
+        if (strstr(str_data, value) == str_data)
+        {
+            occurrences++;
+        }
+
+        str_data++;
+    }
+
+    if (occurrences == 0)
+    {
+        return -1;
+    }
+    else if (count > 0 && count < occurrences)
+    {
+        occurrences = count;
+    }
+
+    return occurrences;
+}
+
+void print_str(string_t *str, const char *beginning, const char *end)
+{
+    if (check_warnings(str, STR_NULL, __func__))
     {
         return;
     }
 
-    allocated_mem -= (orginal_str->size + 1);
-
-    free((char*)orginal_str->data);
-    orginal_str->size = 0;
-    orginal_str->check_allocation = false;
-    orginal_str->data = NULL;
+    printf("%s%s%s", beginning, str->data, end);
 }
 
-void FreeStrArray(String_Array_T *orginal_str_array)
+void print_str_array(string_array_t *str_array, const char *beginning, const char *end)
 {
-    String_T *curr = orginal_str_array->data_set;
+    int i = 0;
+    printf("%s{", beginning);
 
-    for (int i = 0; i < orginal_str_array->size; i++)
+    for (i = 0; i < (str_array->size-1); i++)
     {
-        FreeStr(curr);
-        curr++;
+        printf("\"%s\", ", str_array->data_set[i]->data);
     }
 
-    allocated_mem -= (orginal_str_array->size * sizeof(String_T));
-
-    free(orginal_str_array->data_set);
-    orginal_str_array->size = 0;
-    orginal_str_array->data_set = NULL;
+    printf("\"%s\"}%s", str_array->data_set[i]->data, end);
 }
 
-bool CheckSubStr(const char *str_value, const char *sub_value)
+int get_str_size(string_t *str)
 {
-    while (*sub_value != '\0')
+    if (check_warnings(str, STR_NULL, __func__))
     {
-        if (*str_value == '\0' || *str_value != *sub_value)
+        return -1;
+    }
+
+    return str->size;
+}
+
+char *get_char_str(string_t *str)
+{
+    if (check_warnings(str, STR_NULL, __func__))
+    {
+        return NULL;
+    }
+
+    return str->data;
+}
+
+int get_str_array_size(string_array_t *str_array)
+{
+    if (str_array == NULL)
+    {
+        printf("%s: %swarning:%s string_array is NULL%s\n", __func__, PURPLE, WHITE, RESET);
+        return -1;
+    }
+
+    return str_array->size;
+}
+
+string_t *get_str_array_index(string_array_t *str_array, int index)
+{
+    if (str_array == NULL)
+    {
+        printf("%s: %swarning:%s string_array is NULL%s\n", __func__, PURPLE, WHITE, RESET);
+        return NULL;
+    }
+
+    if (index < 0)
+    {
+        index += str_array->size;
+    }
+
+    return str_array->data_set[index];
+}
+
+void init_str(string_t **str, const char *str_literal)
+{
+    if (check_warnings(*str, STR_ALLOC, __func__))
+    {
+        return;
+    }
+
+    *str = new_mem(sizeof(string_t));
+    (*str)->size = (int)strlen(str_literal);
+
+    (*str)->data = new_mem(sizeof(char) * (size_t)((*str)->size + 1));
+    memcpy((*str)->data, str_literal, (*str)->size);
+    (*str)->data[(*str)->size] = '\0';
+}
+
+void append_str(string_t *str, const char *str_value)
+{
+    if (check_warnings(str, STR_NULL, __func__))
+    {
+        return;
+    }
+
+    int size = (int)strlen(str_value);
+    str->size += size;
+
+    mem_usage.allocated += (u_int32_t)size;
+
+    str->data = realloc(str->data, sizeof(char) * (size_t)(str->size + 1));
+    strcat(str->data, str_value);
+}
+
+void sub_str(string_t **str_dest, string_t *str_src, int start, int end, int step)
+{
+    if (check_warnings(*str_dest, STR_ALLOC, __func__)
+        || check_warnings(str_src, STR_NULL, __func__)
+        || check_ranges(&start, &end, str_src->size, __func__))
+    {
+        return;
+    }
+    else if (step <= 0)
+    {
+        printf("%s: %swarning:%sslice step cannot be less than or equal to zero%s\n", __func__, PURPLE, WHITE, RESET);
+        return;
+    }
+
+    *str_dest = new_mem(sizeof(string_t));
+
+    int total_size = end - start;
+
+    (*str_dest)->data = new_mem(sizeof(char) * (size_t)(total_size+1));
+    (*str_dest)->size = total_size;
+
+    int step_counter = 0;
+    char *new_str = (*str_dest)->data;
+    step--;
+
+    for (int i = 0; i < total_size; i++)
+    {
+        new_str[i] = str_src->data[i + start + step_counter];
+        step_counter += step;
+    }
+
+    new_str[total_size] = '\0';
+}
+
+void copy_str(string_t **str_dest, string_t *str_src)
+{
+    if (check_warnings(*str_dest, STR_ALLOC, __func__)
+        || (check_warnings(str_src, STR_NULL, __func__)))
+    {
+        return;
+    }
+
+    sub_str(str_dest, str_src, 0, 0, 1);
+}
+
+void replace_str(string_t *str, const char *old_str, const char *new_str, int count)
+{
+    if (check_warnings(str, STR_NULL, __func__))
+    {
+        return;
+    }
+
+    int num_of_occurrences = count_occurrences_in_str(str, old_str, count);
+
+    if (num_of_occurrences == -1)
+    {
+        printf("%s: %swarning:%s could not find substring%s\n", __func__, PURPLE, WHITE, RESET);
+        return;
+    }
+
+    int i = 0;
+    int num_of_replacements = 0;
+    int new_str_size = (int)strlen(new_str);
+    int old_str_size = (int)strlen(old_str);
+    int total_size = ((str->size - (old_str_size * num_of_occurrences)) + (new_str_size * num_of_occurrences));
+
+    const char *copy_str_data = str->data;
+    char *replace_str = new_mem(sizeof(char) * (size_t)(total_size + 1));
+
+    while (*copy_str_data != '\0')
+    {
+        if (num_of_replacements < num_of_occurrences && strstr(copy_str_data, old_str) == copy_str_data)
         {
-            return false;
+            memcpy(&replace_str[i], new_str, new_str_size);
+            num_of_replacements++;
+            i += new_str_size;
+            copy_str_data += old_str_size;
         }
-
-        str_value++;
-        sub_value++;
+        else
+        {
+            replace_str[i++] = *copy_str_data++;
+        }
     }
 
-    return true;
+    replace_str[i] = '\0';
+
+    free_mem(str->data, sizeof(char) * (size_t)(str->size + 1));
+
+    str->size = total_size;
+    str->data = replace_str;
 }
 
-int CountIndexInStr(String_T *orginal_str, const char *value)
+void erase_str(string_t *str, const char *value)
 {
-    int count = 0;
-    const char *str_data = orginal_str->data;
-
-    while (*str_data != '\0')
+    if (check_warnings(str, STR_NULL, __func__))
     {
-        if (CheckSubStr(str_data, value))
+        return;
+    }
+
+    replace_str(str, value, "", 0);
+}
+
+void erase_str_count(string_t *str, const char *value, int count)
+{
+    if (check_warnings(str, STR_NULL, __func__))
+    {
+        return;
+    }
+
+    replace_str(str, value, "", count);
+}
+
+void erase_str_index(string_t *str, int start, int end)
+{
+    if (check_warnings(str, STR_NULL, __func__)
+        || check_ranges(&start, &end, str->size, __func__))
+    {
+        return;
+    }
+
+    int j = 0;
+    int new_str_size = str->size - (end - start);
+    char *new_str = new_mem(sizeof(char) * (size_t)(new_str_size + 1));
+
+    for (int i = 0; i < str->size; i++)
+    {
+        if (!(i >= start && i < end))
+        {
+            new_str[j] = str->data[i];
+            j++;
+        }
+    }
+
+    new_str[new_str_size] = '\0';
+
+    free_mem(str->data, sizeof(char) * (size_t)(str->size + 1));
+
+    str->data = new_str;
+    str->size = new_str_size;
+}
+
+int find_str(string_t *str, const char *value)
+{
+    if (check_warnings(str, STR_NULL, __func__))
+    {
+        return -1;
+    }
+
+    int count = 0;
+    char *str_data = str->data;
+
+    while (*str->data != '\0')
+    {
+        if (strstr(str_data, value) == str_data)
         {
             return count;
         }
@@ -96,279 +408,288 @@ int CountIndexInStr(String_T *orginal_str, const char *value)
     return -1;
 }
 
-int CountOccurrencesInStr(String_T *orginal_str, const char *value, int max_split)
+int count_str(string_t *str, const char *value, int start, int end)
 {
-    if (*value == '\0' || max_split < 0)
+    if (check_warnings(str, STR_NULL, __func__) || *value == '\0' 
+        || check_ranges(&start, &end, str->size, __func__))
     {
         return -1;
     }
 
+    int i = start;
     int count = 0;
-    const char *str_data = orginal_str->data;
+    const char *str_data = str->data + start;
 
-    while (*str_data != '\0')
+    while (i < end)
     {
-        if (CheckSubStr(str_data, value))
+        if (strstr(str_data, value) == str_data)
         {
             count++;
         }
 
+        i++;
         str_data++;
-    }
-
-    if (count == 0)
-    {
-        return -1;
-    }
-    else if (max_split > 0 && max_split < count)
-    {
-        count = max_split;
     }
 
     return count;
 }
 
-void AppendStr(String_T *orginal_str, const char *str_value)
+void lstrip_str(string_t *str, char *characters)
 {
-    String_T result;
-    int size = strlen(str_value);
-
-    result.size = orginal_str->size + size;
-
-    if (orginal_str->check_allocation)
+    if (check_warnings(str, STR_NULL, __func__))
     {
-        allocated_mem += size;
-
-        result.data = realloc((char*)orginal_str->data, sizeof(char) * (result.size + 1));
-        strcat((char*)result.data, str_value);
-        result.check_allocation = true;
-        *orginal_str = result;
+        return;
     }
-    else
-    {
-        allocated_mem += result.size + 1;
 
-        result.data = malloc(sizeof(char) * (result.size + 1));
-        memcpy((char*)result.data, orginal_str->data, orginal_str->size);
-        strcat((char*)result.data, str_value);
-        *((char*)result.data + result.size) = '\0';
-        result.check_allocation = true;
-        *orginal_str = result;
+    int new_str_size = str->size;
+    char *str_data = str->data;
+
+    while (check_str_occurrences(characters, *str_data))
+    {
+        new_str_size--;
+        str_data++;
+    }
+
+    if (*str_data != '\0')
+    {
+        char *new_str = new_mem(sizeof(char) * (size_t)(new_str_size + 1));
+        memcpy(new_str, str_data, new_str_size);
+        new_str[new_str_size] = '\0';
+
+        free_mem(str->data, sizeof(char) * (size_t)(str->size + 1));
+
+        str->data = new_str;
+        str->size = new_str_size;
     }
 }
 
-String_T SubStrIndex(String_T *orginal_str, int low_range, int high_range)
+void rstrip_str(string_t *str, char *characters)
 {
-    if (low_range >= high_range || high_range > orginal_str->size)
+    if (check_warnings(str, STR_NULL, __func__))
     {
-        return InitStr("");
+        return;
     }
 
-    int total_size = (high_range - low_range) + 1;
+    int new_str_size = str->size;
+    const char *forward = str->data + new_str_size;
 
-    String_T result;
-    allocated_mem += sizeof(char) * total_size;
-    result.data = malloc(sizeof(char) * total_size);
-    result.check_allocation = true;
+    while (check_str_occurrences(characters, (*(forward-1))))
+    { 
+        forward--;
+        new_str_size--;
+    }
 
-    memcpy((char*)result.data, orginal_str->data + low_range, total_size-1);
-    *((char*)result.data + total_size) = '\0';
-    result.size = strlen(result.data);
+    if (*forward != '\0')
+    {
+        char *new_str = new_mem(sizeof(char) * (size_t)(new_str_size + 1));
+        memcpy(new_str, str->data, new_str_size);
+        new_str[new_str_size] = '\0';
 
-    return result;
+        free_mem(str->data, sizeof(char) * (size_t)(str->size + 1));
+
+        str->data = new_str;
+        str->size = new_str_size;
+    }
 }
 
-String_T SubStrValue(String_T *orginal_str, const char *value1, const char *value2)
+void strip_str(string_t *str)
 {
-    if (*value1 == '\0' || *value2 == '\0')
+    if (check_warnings(str, STR_NULL, __func__))
     {
-        return InitStr("");
+        return;
     }
 
-    int low = CountIndexInStr(orginal_str, value1);
-
-    if (low == -1)
-    {
-        return InitStr("");
-    }
-
-    int high = 0;
-    const char *str_value = orginal_str->data;
-
-    str_value += low;
-
-    String_T str_at_low_index = InitStr(str_value);
-    high = CountIndexInStr(&str_at_low_index, value2);
-
-    if (high == -1)
-    {
-        return InitStr("");
-    }
-
-    return SubStrIndex(&str_at_low_index, 0, high + strlen(value2));
+    lstrip_str(str, " ");
+    rstrip_str(str, " ");
 }
 
-void ReplaceStr(String_T *orginal_str, const char *old_str, const char *new_str, int max_split)
+void strip_str_chars(string_t *str, char *characters)
 {
-    int num_of_occurrences = CountOccurrencesInStr(orginal_str, old_str, max_split);
+    if (check_warnings(str, STR_NULL, __func__))
+    {
+        return;
+    }
 
-    if (num_of_occurrences == -1)
+    lstrip_str(str, characters);
+    rstrip_str(str, characters);
+}
+
+void upper_str(string_t *str)
+{
+    if (check_warnings(str, STR_NULL, __func__))
     {
         return;
     }
 
     int i = 0;
-    int num_of_replacements = 0;
-    int old_str_size = strlen(old_str);
-    int total_size = ((orginal_str->size - (old_str_size * num_of_occurrences)) + (strlen(new_str) * num_of_occurrences));
 
-    allocated_mem += sizeof(char) * (total_size + 1);
-
-    const char *copy_new_str = new_str;
-    const char *str_data = orginal_str->data;
-    const char *replace_str = malloc(sizeof(char) * (total_size + 1));
-
-    while (*str_data != '\0')
+    while (str->data[i] != '\0')
     {
-        if (num_of_replacements < num_of_occurrences && CheckSubStr(str_data, old_str))
-        {
-            while (*new_str != '\0')
-            {
-                *((char*)replace_str + i) = *new_str;
-                i++;
-                new_str++;
-            }
-
-            num_of_replacements++;
-            new_str = copy_new_str;
-            str_data += old_str_size;
-            continue;
-        }
-
-        *((char*)replace_str + i) = *str_data;
+        str->data[i] = (char)toupper(str->data[i]);
         i++;
-        str_data++;
     }
-
-    *((char*)replace_str + i) = '\0';
-
-    FreeStr(orginal_str);
-
-    orginal_str->size = total_size;
-    orginal_str->data = replace_str;
-    orginal_str->check_allocation = true;
 }
 
-
-void EraseStrValue(String_T *orginal_str, const char *value)
-{
-    ReplaceStr(orginal_str, value, "", 0);
-}
-
-void EraseStrIndex(String_T *orginal_str, int low_range, int high_range)
-{
-    String_T result = SubStrIndex(orginal_str, low_range, high_range);
-    EraseStrValue(orginal_str, result.data);
-    FreeStr(&result);
-}
-
-void StripStr(String_T *orginal_str)
-{
-    const char *str_data = orginal_str->data;
-
-    while (*str_data == ' ' || *str_data == '\n')
+void lower_str(string_t *str)
+{  
+    if (check_warnings(str, STR_NULL, __func__))
     {
-        str_data++;
-    }
-
-    if (str_data == '\0')
-    {
-        *orginal_str = InitStr("");
         return;
     }
 
-    int size = strlen(str_data);
-    const char *forward = str_data + size;
+    int i = 0;
 
-    while (*(forward-1) == ' ' || *(forward-1) == '\n')
+    while (str->data[i] != '\0')
     {
-        forward--;
-        size--;
+        str->data[i] = (char)tolower(str->data[i]);
+        i++;
     }
-
-    allocated_mem += sizeof(char) * (size + 1);
-
-    const char *result = malloc(sizeof(char) * (size + 1));
-    memcpy((char*)result, str_data, size);
-    *((char*)result + size) = '\0';
-    
-    FreeStr(orginal_str);
-
-    orginal_str->size = size;
-    orginal_str->data = result;
-    orginal_str->check_allocation = true;
 }
 
-String_Array_T SplitStr(String_T *orginal_str, const char *separator, int max_split)
+void swapcase_str(string_t *str)
 {
-    String_Array_T result;
-    int num_of_occurrences = CountOccurrencesInStr(orginal_str, separator, max_split);
+    if (check_warnings(str, STR_NULL, __func__))
+    {
+        return;
+    }
+
+    int i = 0;
+
+    while (str->data[i] != '\0')
+    {
+        if (isupper(str->data[i]))
+        {
+            str->data[i] = (char)tolower(str->data[i]);
+        }
+        else
+        {
+            str->data[i] = (char)toupper(str->data[i]);
+        }
+
+        i++;
+    }
+}
+
+void capitalize_str(string_t *str)
+{  
+    if (check_warnings(str, STR_NULL, __func__))
+    {
+        return;
+    }
+
+    str->data[0] = (char)toupper(str->data[0]);
+}
+
+void title_str(string_t *str)
+{
+    if (check_warnings(str, STR_NULL, __func__))
+    {
+        return;
+    }
+
+    capitalize_str(str);
+
+    for (int i = (str->size-1); i > 0; i--)
+    {
+        if (!(isalpha(str->data[i-1])))
+        {
+            str->data[i] = (char)toupper(str->data[i]);
+        }
+        else
+        {
+            str->data[i] = str->data[i];
+        }
+    }
+}
+
+int int_str(string_t *str)
+{
+    if (check_warnings(str, STR_NULL, __func__))
+    {
+        return -1;
+    }
+
+    return atoi(str->data);
+}
+
+double double_str(string_t *str)
+{
+    if (check_warnings(str, STR_NULL, __func__))
+    {
+        return -1.0;
+    }
+
+    return atof(str->data);
+}
+
+void split_str(string_array_t **str_array, string_t *str, const char *separator, int max_split)
+{
+    if (*str_array != NULL)
+    {
+        printf("%s: %serror:%s string_array is not NULL%s\n", __func__, RED, WHITE, RESET);
+        exit(1);
+    }
+
+    int num_of_occurrences = count_occurrences_in_str(str, separator, max_split);
+    *str_array = new_mem(sizeof(string_array_t));
 
     if (num_of_occurrences == -1)
     {
-        result.size = 1;
-        result.data_set = malloc(result.size * sizeof(String_T));
-        allocated_mem += (result.size * sizeof(String_T));
-        result.data_set[0] = InitStr(orginal_str->data);
-        AppendStr(&result.data_set[0], "");
+        (*str_array)->size = 1;
+        (*str_array)->data_set = new_mem((size_t)(*str_array)->size * sizeof(string_t*));
+
+        str_array_null_init(*str_array);
+        init_str(&(*str_array)->data_set[0], str->data);
     
-        return result;
+        return;
     }
 
     int i = 0;
     int total_len = 0;
-
     const char *split_str = "";
-    char *str_value = strdup(orginal_str->data);
+    char *str_value = strdup(str->data);
 
-    result.size = num_of_occurrences + 1;
-    result.data_set = malloc(result.size * sizeof(String_T));
-    allocated_mem += (result.size * sizeof(String_T));
+    (*str_array)->size = num_of_occurrences + 1;
+    (*str_array)->data_set = new_mem((size_t)(*str_array)->size * sizeof(string_t*));
+    str_array_null_init(*str_array);
+    split_str = strsep(&str_value, separator);
 
-    while ((split_str = strsep(&str_value, separator)) != NULL && i < num_of_occurrences)
+    while (split_str != NULL && i < num_of_occurrences)
     {
-        result.data_set[i] = InitStr(split_str);
-        AppendStr(&result.data_set[i], "");
-
-        total_len += result.data_set[i].size;
+        init_str(&(*str_array)->data_set[i], split_str);
+        split_str = strsep(&str_value, separator);
+        total_len += (*str_array)->data_set[i]->size;
         i++;
     }
 
-    result.data_set[i] = InitStr(orginal_str->data + total_len + (num_of_occurrences * strlen(separator)));
-    AppendStr(&result.data_set[i], "");
-
-    return result;
+    init_str(&(*str_array)->data_set[i], str->data + total_len + (num_of_occurrences * (int)strlen(separator)));
 }
 
-void PrintStr(String_T orginal_str, const char *beginning, const char *end)
+void free_str(string_t **str)
 {
-    printf("%s%s%s", beginning, orginal_str.data, end);
-}
-
-void PrintStrArray(String_Array_T orginal_str_array, const char *beginning, const char *end)
-{
-    int i = 0;
-    printf("%s{", beginning);
-
-    for (i = 0; i < (orginal_str_array.size-1); i++)
+    if (check_warnings(*str, STR_NULL, __func__))
     {
-        printf("\"%s\", ", orginal_str_array.data_set[i].data);
+        return;
     }
 
-    printf("\"%s\"}%s", orginal_str_array.data_set[i].data, end);
+    free_mem((*str)->data, sizeof(char) * (size_t)((*str)->size + 1));
+    free_mem(*str, sizeof(string_t));
+    *str = NULL;
 }
 
-void PrintAllocatedMemory()
+void free_str_array(string_array_t **str_array)
 {
-    printf("Bytes Allocated: %d\n", allocated_mem);
+    if (*str_array == NULL)
+    {
+        printf("%s: %swarning:%s string_array is NULL%s\n", __func__, PURPLE, WHITE, RESET);
+    }
+
+    for (int i = 0; i < (*str_array)->size; i++)
+    {
+        free_str(&(*str_array)->data_set[i]);
+    }
+
+    free_mem((*str_array)->data_set, (size_t)(*str_array)->size * sizeof(string_t*));
+    free_mem(*str_array, sizeof(string_t));
+    *str_array = NULL;
 }
