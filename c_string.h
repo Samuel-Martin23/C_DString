@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <strings.h>
 #include <ctype.h>
+#include <math.h>
 #include "../C_Data_Structures/C_Allocation_Metrics/allocation_metrics.h"
 
 typedef struct string string_t;

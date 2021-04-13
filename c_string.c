@@ -82,6 +82,11 @@ static bool check_ranges(int *start, int *end, int size, const char *function_na
     return false;
 }
 
+static int ceil_int(int x, int y) 
+{
+    return (int)ceil(x / (double)y);
+}
+
 static bool check_str_occurrences(char *characters, char value)
 {
     if (value == '\0')
@@ -260,7 +265,7 @@ void sub_str(string_t **str_dest, string_t *str_src, int start, int end, int ste
     *str_dest = new_mem(sizeof(string_t));
 
     int total_size = end - start;
-    total_size = step >= total_size ? 1 : total_size / step;
+    total_size = step >= total_size ? 1 : ceil_int(total_size, step);
 
     (*str_dest)->data = new_mem(sizeof(char) * (size_t)(total_size+1));
     (*str_dest)->size = total_size;
