@@ -260,21 +260,21 @@ void sub_str(string_t **str_dest, string_t *str_src, int start, int end, int ste
     *str_dest = new_mem(sizeof(string_t));
 
     int total_size = end - start;
+    total_size = step >= total_size ? 1 : total_size / step;
 
     (*str_dest)->data = new_mem(sizeof(char) * (size_t)(total_size+1));
     (*str_dest)->size = total_size;
 
     int step_counter = 0;
-    char *new_str = (*str_dest)->data;
     step--;
 
     for (int i = 0; i < total_size; i++)
     {
-        new_str[i] = str_src->data[i + start + step_counter];
+        (*str_dest)->data[i] = str_src->data[i + start + step_counter];
         step_counter += step;
     }
 
-    new_str[total_size] = '\0';
+    (*str_dest)->data[total_size] = '\0';
 }
 
 void copy_str(string_t **str_dest, string_t *str_src)
