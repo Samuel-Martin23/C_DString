@@ -519,6 +519,49 @@ void strip_str_chars(string_t *str, char *characters)
     rstrip_str(str, characters);
 }
 
+void split_str(string_array_t **str_array, string_t *str, const char *separator, int max_split)
+{
+    if (*str_array != NULL)
+    {
+        printf("%s: %serror:%s string_array is not NULL%s\n", __func__, RED, WHITE, RESET);
+        exit(1);
+    }
+
+    int num_of_occurrences = count_occurrences_in_str(str, separator, max_split);
+    *str_array = new_mem(sizeof(string_array_t));
+
+    if (num_of_occurrences == -1)
+    {
+        (*str_array)->size = 1;
+        (*str_array)->data_set = new_mem((size_t)(*str_array)->size * sizeof(string_t*));
+
+        str_array_null_init(*str_array);
+        init_str(&(*str_array)->data_set[0], str->data);
+    
+        return;
+    }
+
+    int i = 0;
+    int total_len = 0;
+    const char *split_str = "";
+    char *str_value = strdup(str->data);
+
+    (*str_array)->size = num_of_occurrences + 1;
+    (*str_array)->data_set = new_mem((size_t)(*str_array)->size * sizeof(string_t*));
+    str_array_null_init(*str_array);
+    split_str = strsep(&str_value, separator);
+
+    while (split_str != NULL && i < num_of_occurrences)
+    {
+        init_str(&(*str_array)->data_set[i], split_str);
+        split_str = strsep(&str_value, separator);
+        total_len += (*str_array)->data_set[i]->size;
+        i++;
+    }
+
+    init_str(&(*str_array)->data_set[i], str->data + total_len + (num_of_occurrences * (int)strlen(separator)));
+}
+
 void upper_str(string_t *str)
 {
     if (check_warnings(str, STR_NULL, __func__))
@@ -625,49 +668,6 @@ double double_str(string_t *str)
     }
 
     return atof(str->data);
-}
-
-void split_str(string_array_t **str_array, string_t *str, const char *separator, int max_split)
-{
-    if (*str_array != NULL)
-    {
-        printf("%s: %serror:%s string_array is not NULL%s\n", __func__, RED, WHITE, RESET);
-        exit(1);
-    }
-
-    int num_of_occurrences = count_occurrences_in_str(str, separator, max_split);
-    *str_array = new_mem(sizeof(string_array_t));
-
-    if (num_of_occurrences == -1)
-    {
-        (*str_array)->size = 1;
-        (*str_array)->data_set = new_mem((size_t)(*str_array)->size * sizeof(string_t*));
-
-        str_array_null_init(*str_array);
-        init_str(&(*str_array)->data_set[0], str->data);
-    
-        return;
-    }
-
-    int i = 0;
-    int total_len = 0;
-    const char *split_str = "";
-    char *str_value = strdup(str->data);
-
-    (*str_array)->size = num_of_occurrences + 1;
-    (*str_array)->data_set = new_mem((size_t)(*str_array)->size * sizeof(string_t*));
-    str_array_null_init(*str_array);
-    split_str = strsep(&str_value, separator);
-
-    while (split_str != NULL && i < num_of_occurrences)
-    {
-        init_str(&(*str_array)->data_set[i], split_str);
-        split_str = strsep(&str_value, separator);
-        total_len += (*str_array)->data_set[i]->size;
-        i++;
-    }
-
-    init_str(&(*str_array)->data_set[i], str->data + total_len + (num_of_occurrences * (int)strlen(separator)));
 }
 
 void free_str(string_t **str)

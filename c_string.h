@@ -34,6 +34,7 @@ void lstrip_str(string_t *str, char *characters);
 void rstrip_str(string_t *str, char *characters);
 void strip_str(string_t *str);
 void strip_str_chars(string_t *str, char *characters);
+void split_str(string_array_t **str_array, string_t *str, const char *separator, int max_split);
 void upper_str(string_t *str);
 void lower_str(string_t *str);
 void swapcase_str(string_t *str);
@@ -41,7 +42,6 @@ void capitalize_str(string_t *str);
 void title_str(string_t *str);
 int int_str(string_t *str);
 double double_str(string_t *str);
-void split_str(string_array_t **str_array, string_t *str, const char *separator, int max_split);
 void free_str(string_t **str);
 void free_str_array(string_array_t **str_array);
 
