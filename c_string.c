@@ -204,15 +204,19 @@ int get_str_size(string_t *str)
     return str->size;
 }
 
-char *get_char_str(string_t *str)
+void get_char_str(char **new_char_str, string_t *str)
 {
     if (check_warnings(str, STR_NULL, __func__))
     {
-        return NULL;
+        return;
+    }
+    else if (*new_char_str != NULL)
+    {
+        printf("%s: %swarning:%s char pointer not is NULL%s\n", __func__, PURPLE, WHITE, RESET);
     }
 
     mem_usage.allocated += sizeof(char) * (size_t)(str->size + 1);
-    return strdup(str->data);
+    *new_char_str = strdup(str->data);
 }
 
 int get_str_array_size(string_array_t *str_array)
@@ -226,12 +230,16 @@ int get_str_array_size(string_array_t *str_array)
     return str_array->size;
 }
 
-string_t *get_str_array_index(string_array_t *str_array, int index)
+void get_str_array_index(string_t **new_str, string_array_t *str_array, int index)
 {
-    if (str_array == NULL)
+    if (check_warnings(*new_str, STR_ALLOC, __func__))
+    {
+        return;
+    }
+    else if (str_array == NULL)
     {
         printf("%s: %swarning:%s string_array is NULL%s\n", __func__, PURPLE, WHITE, RESET);
-        return NULL;
+        return;
     }
 
     if (index < 0)
@@ -239,7 +247,13 @@ string_t *get_str_array_index(string_array_t *str_array, int index)
         index += str_array->size;
     }
 
-    return str_array->data_set[index];
+    if (index < 0 || index >= str_array->size)
+    {
+        printf("%s: %swarning:%s index is out of range%s\n", __func__, PURPLE, WHITE, RESET);
+        return;
+    }
+
+    return init_str(new_str, str_array->data_set[index]->data);
 }
 
 void init_str(string_t **str, const char *str_literal)

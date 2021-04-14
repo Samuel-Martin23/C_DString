@@ -16,9 +16,9 @@ void print_str(string_t *str, const char *beginning, const char *end);
 void print_str_array(string_array_t *str_array, const char *beginning, const char *end);
 
 int get_str_size(string_t *str);
-char *get_char_str(string_t *str);
+void get_char_str(char **new_char_str, string_t *str);
 int get_str_array_size(string_array_t *str_array);
-string_t *get_str_array_index(string_array_t *str_array, int index);
+void get_str_array_index(string_t **new_str, string_array_t *str_array, int index);
 
 void init_str(string_t **str, const char *str_literal);
 void append_str(string_t *str, const char *str_value);
