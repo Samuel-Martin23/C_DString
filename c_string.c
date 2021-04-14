@@ -51,6 +51,28 @@ static bool check_warnings(string_t *str, u_int16_t warning_code, const char *fu
     return false;
 }
 
+static char *strsep_m(char **string, char *separator) 
+{
+    if (*string == NULL)
+    {
+        return *string;
+    }
+
+    char *end = strstr(*string, separator);
+    char *temp = *string;
+
+    if (end == NULL)
+    {
+        *string = NULL;
+        return temp;
+    }
+
+    *end = '\0';
+    *string = end + strlen(separator);
+
+    return temp;
+}
+
 static bool check_ranges(int *start, int *end, int size, const char *function_name)
 {
     if (*start >= size || *end >= size)
@@ -115,31 +137,27 @@ static void str_array_null_init(string_array_t *str_array)
     }
 }
 
-static int count_occurrences_in_str(string_t *str, const char *value, int count)
+static int count_occurrences_in_str(const char *str_data, const char *value, int count, int start, int end)
 {
     if (*value == '\0' || count < 0)
     {
         return -1;
     }
 
+    int i = 0;
     int occurrences = 0;
-    const char *str_data = str->data;
+    int value_len = (int)strlen(value);
+    str_data = strstr(str_data + start, value);
 
-    while (*str_data != '\0')
+    while (str_data != NULL && i < end)
     {
-        if (strstr(str_data, value) == str_data)
-        {
-            occurrences++;
-        }
-
-        str_data++;
+        i++;
+        occurrences++;
+        str_data += value_len;
+        str_data = strstr(str_data, value);
     }
 
-    if (occurrences == 0)
-    {
-        return -1;
-    }
-    else if (count > 0 && count < occurrences)
+    if (count > 0 && count < occurrences)
     {
         occurrences = count;
     }
@@ -159,6 +177,12 @@ void print_str(string_t *str, const char *beginning, const char *end)
 
 void print_str_array(string_array_t *str_array, const char *beginning, const char *end)
 {
+    if (str_array == NULL)
+    {
+        printf("%s: %swarning:%s string_array is NULL%s\n", __func__, PURPLE, WHITE, RESET);
+        return;
+    }
+
     int i = 0;
     printf("%s{", beginning);
 
@@ -187,7 +211,8 @@ char *get_char_str(string_t *str)
         return NULL;
     }
 
-    return str->data;
+    mem_usage.allocated += sizeof(char) * (size_t)(str->size + 1);
+    return strdup(str->data);
 }
 
 int get_str_array_size(string_array_t *str_array)
@@ -226,10 +251,8 @@ void init_str(string_t **str, const char *str_literal)
 
     *str = new_mem(sizeof(string_t));
     (*str)->size = (int)strlen(str_literal);
-
-    (*str)->data = new_mem(sizeof(char) * (size_t)((*str)->size + 1));
-    memcpy((*str)->data, str_literal, (*str)->size);
-    (*str)->data[(*str)->size] = '\0';
+    (*str)->data = strdup(str_literal);
+    mem_usage.allocated += sizeof(char) * (size_t)((*str)->size + 1);
 }
 
 void append_str(string_t *str, const char *str_value)
@@ -245,7 +268,7 @@ void append_str(string_t *str, const char *str_value)
     mem_usage.allocated += (u_int32_t)size;
 
     str->data = realloc(str->data, sizeof(char) * (size_t)(str->size + 1));
-    strcat(str->data, str_value);
+    memcpy(&str->data[str->size-size], str_value, size+1);
 }
 
 void sub_str(string_t **str_dest, string_t *str_src, int start, int end, int step)
@@ -279,7 +302,7 @@ void sub_str(string_t **str_dest, string_t *str_src, int start, int end, int ste
         step_counter += step;
     }
 
-    (*str_dest)->data[total_size] = '\0';
+    (*str_dest)->data[(*str_dest)->size] = '\0';
 }
 
 void copy_str(string_t **str_dest, string_t *str_src)
@@ -300,9 +323,9 @@ void replace_str(string_t *str, const char *old_str, const char *new_str, int co
         return;
     }
 
-    int num_of_occurrences = count_occurrences_in_str(str, old_str, count);
+    int num_of_occurrences = count_occurrences_in_str(str->data, old_str, count, 0, str->size);
 
-    if (num_of_occurrences == -1)
+    if (num_of_occurrences == 0)
     {
         printf("%s: %swarning:%s could not find substring%s\n", __func__, PURPLE, WHITE, RESET);
         return;
@@ -396,21 +419,9 @@ int find_str(string_t *str, const char *value)
         return -1;
     }
 
-    int count = 0;
-    char *str_data = str->data;
+    char *found_str = strstr(str->data, value);
 
-    while (*str->data != '\0')
-    {
-        if (strstr(str_data, value) == str_data)
-        {
-            return count;
-        }
-
-        count++;
-        str_data++;
-    }
-
-    return -1;
+    return found_str ? (int)(found_str - str->data) : -1;
 }
 
 int count_str(string_t *str, const char *value, int start, int end)
@@ -418,25 +429,10 @@ int count_str(string_t *str, const char *value, int start, int end)
     if (check_warnings(str, STR_NULL, __func__) || *value == '\0' 
         || check_ranges(&start, &end, str->size, __func__))
     {
-        return -1;
+        return 0;
     }
 
-    int i = start;
-    int count = 0;
-    const char *str_data = str->data + start;
-
-    while (i < end)
-    {
-        if (strstr(str_data, value) == str_data)
-        {
-            count++;
-        }
-
-        i++;
-        str_data++;
-    }
-
-    return count;
+    return count_occurrences_in_str(str->data, value, 0, start, end);
 }
 
 void lstrip_str(string_t *str, char *characters)
@@ -458,8 +454,7 @@ void lstrip_str(string_t *str, char *characters)
     if (*str_data != '\0')
     {
         char *new_str = new_mem(sizeof(char) * (size_t)(new_str_size + 1));
-        memcpy(new_str, str_data, new_str_size);
-        new_str[new_str_size] = '\0';
+        memcpy(new_str, str_data, new_str_size+1);
 
         free_mem(str->data, sizeof(char) * (size_t)(str->size + 1));
 
@@ -519,47 +514,40 @@ void strip_str_chars(string_t *str, char *characters)
     rstrip_str(str, characters);
 }
 
-void split_str(string_array_t **str_array, string_t *str, const char *separator, int max_split)
+void split_str(string_array_t **str_array, string_t *str, char *separator, int max_split)
 {
     if (*str_array != NULL)
     {
         printf("%s: %serror:%s string_array is not NULL%s\n", __func__, RED, WHITE, RESET);
         exit(1);
     }
-
-    int num_of_occurrences = count_occurrences_in_str(str, separator, max_split);
-    *str_array = new_mem(sizeof(string_array_t));
-
-    if (num_of_occurrences == -1)
+    else if (check_warnings(str, STR_NULL, __func__))
     {
-        (*str_array)->size = 1;
-        (*str_array)->data_set = new_mem((size_t)(*str_array)->size * sizeof(string_t*));
-
-        str_array_null_init(*str_array);
-        init_str(&(*str_array)->data_set[0], str->data);
-    
         return;
     }
 
     int i = 0;
-    int total_len = 0;
-    const char *split_str = "";
-    char *str_value = strdup(str->data);
+    char *split_str = "";
+    char *alloc_str = strdup(str->data);
+    char *str_data = alloc_str;
+    int num_of_occurrences = count_occurrences_in_str(str->data, separator, max_split, 0, str->size);
 
+    mem_usage.allocated += sizeof(char) * (size_t)(str->size + 1);
+
+    *str_array = new_mem(sizeof(string_array_t));
     (*str_array)->size = num_of_occurrences + 1;
     (*str_array)->data_set = new_mem((size_t)(*str_array)->size * sizeof(string_t*));
     str_array_null_init(*str_array);
-    split_str = strsep(&str_value, separator);
 
-    while (split_str != NULL && i < num_of_occurrences)
+    while (i < num_of_occurrences)
     {
+        split_str = strsep_m(&str_data, separator);
         init_str(&(*str_array)->data_set[i], split_str);
-        split_str = strsep(&str_value, separator);
-        total_len += (*str_array)->data_set[i]->size;
         i++;
     }
 
-    init_str(&(*str_array)->data_set[i], str->data + total_len + (num_of_occurrences * (int)strlen(separator)));
+    init_str(&(*str_array)->data_set[i], str_data);
+    free_mem(alloc_str, sizeof(char) * (size_t)(str->size + 1));
 }
 
 void upper_str(string_t *str)
@@ -687,6 +675,7 @@ void free_str_array(string_array_t **str_array)
     if (*str_array == NULL)
     {
         printf("%s: %swarning:%s string_array is NULL%s\n", __func__, PURPLE, WHITE, RESET);
+        return;
     }
 
     for (int i = 0; i < (*str_array)->size; i++)
