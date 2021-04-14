@@ -141,7 +141,7 @@ static int count_occurrences_in_str(const char *str_data, const char *value, int
 {
     if (*value == '\0' || count < 0)
     {
-        return -1;
+        return 0;
     }
 
     int i = 0;
