@@ -9,7 +9,6 @@ int main()
     init_str(&full_name, "  \nSamuel\n  ");
 
     strip_str(full_name);
-    strip_str_chars(full_name, "\n");
     append_str(full_name, " Martin");
 
     sub_str(&last_name, full_name, 7, 0, 1);

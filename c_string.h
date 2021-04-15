@@ -12,6 +12,8 @@
 typedef struct string string_t;
 typedef struct string_array string_array_t;
 
+void sys_output(string_t **str, const char *cmd);
+
 void print_str(string_t *str, const char *beginning, const char *end);
 void print_str_array(string_array_t *str_array, const char *beginning, const char *end);
 

@@ -9,6 +9,8 @@
 #define WHITE                       "\033[1;97m"
 #define RESET                       "\033[0m"
 
+#define MAX_CHARS                   1000000
+
 typedef struct string
 {
     int size;
@@ -165,6 +167,38 @@ static int count_occurrences_in_str(const char *str_data, const char *value, int
     return occurrences;
 }
 
+void sys_output(string_t **str, const char *cmd)
+{
+    if (check_warnings(*str, STR_ALLOC, __func__) || *cmd == '\0')
+    {
+        return;
+    }
+
+    int i = 0;
+    char source_file[MAX_CHARS];
+    FILE *fp = popen(cmd, "r");
+
+    if (fp == NULL) 
+    {
+        printf("Failed to run command\n");
+        exit(1);
+    }
+
+    char next_char = (char)getc(fp);
+
+    while (next_char != EOF)
+    {
+        source_file[i] = next_char;
+        i++;
+        next_char = (char)getc(fp);
+    }
+
+    source_file[i] = '\0';
+
+    pclose(fp);
+    init_str(str, source_file);
+}
+
 void print_str(string_t *str, const char *beginning, const char *end)
 {
     if (check_warnings(str, STR_NULL, __func__))
@@ -212,7 +246,8 @@ void get_char_str(char **new_char_str, string_t *str)
     }
     else if (*new_char_str != NULL)
     {
-        printf("%s: %swarning:%s char pointer not is NULL%s\n", __func__, PURPLE, WHITE, RESET);
+        printf("%s: %swarning:%s char pointer is not NULL%s\n", __func__, PURPLE, WHITE, RESET);
+        return;
     }
 
     mem_usage.allocated += sizeof(char) * (size_t)(str->size + 1);
@@ -301,13 +336,13 @@ void sub_str(string_t **str_dest, string_t *str_src, int start, int end, int ste
 
     *str_dest = new_mem(sizeof(string_t));
 
+    int step_counter = 0;
     int total_size = end - start;
     total_size = step >= total_size ? 1 : ceil_int(total_size, step);
 
     (*str_dest)->data = new_mem(sizeof(char) * (size_t)(total_size+1));
     (*str_dest)->size = total_size;
 
-    int step_counter = 0;
     step--;
 
     for (int i = 0; i < total_size; i++)
@@ -513,8 +548,8 @@ void strip_str(string_t *str)
         return;
     }
 
-    lstrip_str(str, " ");
-    rstrip_str(str, " ");
+    lstrip_str(str, "\n ");
+    rstrip_str(str, "\n ");
 }
 
 void strip_str_chars(string_t *str, char *characters)
@@ -581,7 +616,7 @@ void upper_str(string_t *str)
 }
 
 void lower_str(string_t *str)
-{  
+{
     if (check_warnings(str, STR_NULL, __func__))
     {
         return;
