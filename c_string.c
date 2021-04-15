@@ -75,6 +75,22 @@ static char *strsep_m(char **string, char *separator)
     return temp;
 }
 
+static bool check_index(int *index, int size, const char *function_name)
+{
+    if (*index < 0)
+    {
+        *index += size;
+    }
+
+    if (*index < 0 || *index >= size)
+    {
+        printf("%s: %swarning:%s index is out of range%s\n", function_name, PURPLE, WHITE, RESET);
+        return true;
+    }
+
+    return false;
+}
+
 static bool check_ranges(int *start, int *end, int size, const char *function_name)
 {
     if (*start >= size || *end >= size)
@@ -167,36 +183,68 @@ static int count_occurrences_in_str(const char *str_data, const char *value, int
     return occurrences;
 }
 
-void sys_output(string_t **str, const char *cmd)
+static void read_content(FILE *fp, string_t **str)
+{
+    init_str(str, "");
+    char source_file[MAX_CHARS];
+
+    if (fp == NULL) 
+    {
+        printf("%s: %swarning:%s failed to read content%s\n", __func__, PURPLE, WHITE, RESET);
+        return;
+    }
+
+    while (!feof(fp))
+    {
+        if (fgets(source_file, MAX_CHARS, fp) != NULL)
+        {
+            append_str(*str, source_file);
+        }
+    }
+}
+
+void read_file_str(string_t **str, char *path)
+{
+    if (check_warnings(*str, STR_ALLOC, __func__) || *path == '\0')
+    {
+        return;
+    }
+
+    FILE *fp = fopen(path, "r");
+    read_content(fp, str);
+    fclose(fp);
+}
+
+void write_file_str(string_t *str, char *path, bool append_file)
+{
+    if (check_warnings(str, STR_ALLOC, __func__) || *path == '\0')
+    {
+        return;
+    }
+
+    const char *write_opt = append_file ? "a" : "w";
+    FILE *fp = fopen(path, write_opt);
+
+    if (fp == NULL) 
+    {
+        printf("%s: %swarning:%s failed to write content%s\n", __func__, PURPLE, WHITE, RESET);
+        return;
+    }
+
+    fprintf(fp, "%s", str->data);
+    fclose(fp);
+}
+
+void sys_output_str(string_t **str, char *cmd)
 {
     if (check_warnings(*str, STR_ALLOC, __func__) || *cmd == '\0')
     {
         return;
     }
 
-    int i = 0;
-    char source_file[MAX_CHARS];
     FILE *fp = popen(cmd, "r");
-
-    if (fp == NULL) 
-    {
-        printf("Failed to run command\n");
-        exit(1);
-    }
-
-    char next_char = (char)getc(fp);
-
-    while (next_char != EOF)
-    {
-        source_file[i] = next_char;
-        i++;
-        next_char = (char)getc(fp);
-    }
-
-    source_file[i] = '\0';
-
-    pclose(fp);
-    init_str(str, source_file);
+    read_content(fp, str);
+    fclose(fp);
 }
 
 void print_str(string_t *str, const char *beginning, const char *end)
@@ -267,7 +315,8 @@ int get_str_array_size(string_array_t *str_array)
 
 void get_str_array_index(string_t **new_str, string_array_t *str_array, int index)
 {
-    if (check_warnings(*new_str, STR_ALLOC, __func__))
+    if (check_warnings(*new_str, STR_ALLOC, __func__) || 
+        check_index(&index, str_array->size, __func__))
     {
         return;
     }
@@ -277,18 +326,27 @@ void get_str_array_index(string_t **new_str, string_array_t *str_array, int inde
         return;
     }
 
-    if (index < 0)
-    {
-        index += str_array->size;
-    }
-
-    if (index < 0 || index >= str_array->size)
-    {
-        printf("%s: %swarning:%s index is out of range%s\n", __func__, PURPLE, WHITE, RESET);
-        return;
-    }
-
     return init_str(new_str, str_array->data_set[index]->data);
+}
+
+bool str_array_cmp_char(char *char_str, string_array_t *str_array, int index)
+{
+    if (check_index(&index, str_array->size, __func__))
+    {
+        return false;
+    }
+
+    return !(strcmp(char_str, (str_array->data_set[index]->data)));
+}
+
+bool str_array_cmp_str(string_t *str, string_array_t *str_array, int index)
+{
+    if (check_index(&index, str_array->size, __func__))
+    {
+        return false;
+    }
+
+    return !(strcmp(str->data, (str_array->data_set[index]->data)));
 }
 
 void init_str(string_t **str, const char *str_literal)

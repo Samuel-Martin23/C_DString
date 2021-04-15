@@ -12,7 +12,9 @@
 typedef struct string string_t;
 typedef struct string_array string_array_t;
 
-void sys_output(string_t **str, const char *cmd);
+void read_file_str(string_t **str, char *path);
+void write_file_str(string_t *str, char *path, bool append_file);
+void sys_output_str(string_t **str, char *cmd);
 
 void print_str(string_t *str, const char *beginning, const char *end);
 void print_str_array(string_array_t *str_array, const char *beginning, const char *end);
@@ -21,6 +23,9 @@ int get_str_size(string_t *str);
 void get_char_str(char **new_char_str, string_t *str);
 int get_str_array_size(string_array_t *str_array);
 void get_str_array_index(string_t **new_str, string_array_t *str_array, int index);
+
+bool str_array_cmp_char(char *char_str, string_array_t *str_array, int index);
+bool str_array_cmp_str(string_t *str, string_array_t *str_array, int index);
 
 void init_str(string_t **str, const char *str_literal);
 void append_str(string_t *str, const char *str_value);
