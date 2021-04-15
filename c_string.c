@@ -791,6 +791,6 @@ void free_str_array(string_array_t **str_array)
     }
 
     free_mem((*str_array)->data_set, (size_t)(*str_array)->size * sizeof(string_t*));
-    free_mem(*str_array, sizeof(string_t));
+    free_mem(*str_array, sizeof(string_array_t));
     *str_array = NULL;
 }
