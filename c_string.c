@@ -203,6 +203,35 @@ static void read_content(FILE *fp, string_t **str)
     }
 }
 
+void print_str(string_t *str, const char *beginning, const char *end)
+{
+    if (check_warnings(str, STR_NULL, __func__))
+    {
+        return;
+    }
+
+    printf("%s%s%s", beginning, str->data, end);
+}
+
+void print_str_array(string_array_t *str_array, const char *beginning, const char *end)
+{
+    if (str_array == NULL)
+    {
+        printf("%s: %swarning:%s string_array is NULL%s\n", __func__, PURPLE, WHITE, RESET);
+        return;
+    }
+
+    int i = 0;
+    printf("%s{", beginning);
+
+    for (i = 0; i < (str_array->size-1); i++)
+    {
+        printf("\"%s\", ", str_array->data_set[i]->data);
+    }
+
+    printf("\"%s\"}%s", str_array->data_set[i]->data, end);
+}
+
 void read_file_str(string_t **str, char *path)
 {
     if (check_warnings(*str, STR_ALLOC, __func__) || *path == '\0')
@@ -247,33 +276,17 @@ void sys_output_str(string_t **str, char *cmd)
     fclose(fp);
 }
 
-void print_str(string_t *str, const char *beginning, const char *end)
+char *alloc_charp(char *charp)
 {
-    if (check_warnings(str, STR_NULL, __func__))
-    {
-        return;
-    }
-
-    printf("%s%s%s", beginning, str->data, end);
+    mem_usage.allocated += sizeof(char) * (size_t)(strlen(charp) + 1);
+    return strdup(charp);
 }
 
-void print_str_array(string_array_t *str_array, const char *beginning, const char *end)
+string_t *alloc_str(string_t *str)
 {
-    if (str_array == NULL)
-    {
-        printf("%s: %swarning:%s string_array is NULL%s\n", __func__, PURPLE, WHITE, RESET);
-        return;
-    }
-
-    int i = 0;
-    printf("%s{", beginning);
-
-    for (i = 0; i < (str_array->size-1); i++)
-    {
-        printf("\"%s\", ", str_array->data_set[i]->data);
-    }
-
-    printf("\"%s\"}%s", str_array->data_set[i]->data, end);
+    string_t *new_str = NULL;
+    init_str(&new_str, str->data);
+    return new_str;
 }
 
 int get_str_size(string_t *str)
@@ -286,23 +299,17 @@ int get_str_size(string_t *str)
     return str->size;
 }
 
-void get_char_str(char **new_char_str, string_t *str)
+char *get_str_charp(string_t *str)
 {
     if (check_warnings(str, STR_NULL, __func__))
     {
-        return;
-    }
-    else if (*new_char_str != NULL)
-    {
-        printf("%s: %swarning:%s char pointer is not NULL%s\n", __func__, PURPLE, WHITE, RESET);
-        return;
+        return NULL;
     }
 
-    mem_usage.allocated += sizeof(char) * (size_t)(str->size + 1);
-    *new_char_str = strdup(str->data);
+    return str->data;
 }
 
-int get_str_array_size(string_array_t *str_array)
+int get_sa_size(string_array_t *str_array)
 {
     if (str_array == NULL)
     {
@@ -313,23 +320,22 @@ int get_str_array_size(string_array_t *str_array)
     return str_array->size;
 }
 
-void get_str_array_index(string_t **new_str, string_array_t *str_array, int index)
+string_t *get_sa_index(string_array_t *str_array, int index)
 {
-    if (check_warnings(*new_str, STR_ALLOC, __func__) || 
-        check_index(&index, str_array->size, __func__))
+    if (check_index(&index, str_array->size, __func__))
     {
-        return;
+        return NULL;
     }
     else if (str_array == NULL)
     {
         printf("%s: %swarning:%s string_array is NULL%s\n", __func__, PURPLE, WHITE, RESET);
-        return;
+        return NULL;
     }
 
-    return init_str(new_str, str_array->data_set[index]->data);
+    return str_array->data_set[index];
 }
 
-bool str_array_cmp_char(char *char_str, string_array_t *str_array, int index)
+bool sa_cmp_charp(char *char_str, string_array_t *str_array, int index)
 {
     if (check_index(&index, str_array->size, __func__))
     {
@@ -339,7 +345,7 @@ bool str_array_cmp_char(char *char_str, string_array_t *str_array, int index)
     return !(strcmp(char_str, (str_array->data_set[index]->data)));
 }
 
-bool str_array_cmp_str(string_t *str, string_array_t *str_array, int index)
+bool sa_cmp(string_t *str, string_array_t *str_array, int index)
 {
     if (check_index(&index, str_array->size, __func__))
     {
@@ -360,6 +366,26 @@ void init_str(string_t **str, const char *str_literal)
     (*str)->size = (int)strlen(str_literal);
     (*str)->data = strdup(str_literal);
     mem_usage.allocated += sizeof(char) * (size_t)((*str)->size + 1);
+}
+
+void init_va_str(string_t **str, int size, ...)
+{
+    if (check_warnings(*str, STR_ALLOC, __func__) || size < 1)
+    {
+        return;
+    }
+
+    va_list args;
+    va_start(args, size);
+
+    init_str(str, va_arg(args, char*));
+
+    for (int i = 1; i < size; i++)
+    {
+        append_str(*str, va_arg(args, char*));
+    }
+
+    va_end(args);
 }
 
 void append_str(string_t *str, const char *str_value)
@@ -763,6 +789,11 @@ double double_str(string_t *str)
     }
 
     return atof(str->data);
+}
+
+void free_charp(char *str)
+{
+    free_mem(str, sizeof(char) * (strlen(str)+1));
 }
 
 void free_str(string_t **str)

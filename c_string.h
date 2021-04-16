@@ -7,27 +7,30 @@
 #include <strings.h>
 #include <ctype.h>
 #include <math.h>
+#include <stdarg.h>
 #include "../C_Data_Structures/C_Allocation_Metrics/allocation_metrics.h"
 
 typedef struct string string_t;
 typedef struct string_array string_array_t;
 
+void print_str(string_t *str, const char *beginning, const char *end);
+void print_str_array(string_array_t *str_array, const char *beginning, const char *end);
+
 void read_file_str(string_t **str, char *path);
 void write_file_str(string_t *str, char *path, bool append_file);
 void sys_output_str(string_t **str, char *cmd);
 
-void print_str(string_t *str, const char *beginning, const char *end);
-void print_str_array(string_array_t *str_array, const char *beginning, const char *end);
-
+char *alloc_charp(char *charp);
+string_t *alloc_str(string_t *str);
 int get_str_size(string_t *str);
-void get_char_str(char **new_char_str, string_t *str);
-int get_str_array_size(string_array_t *str_array);
-void get_str_array_index(string_t **new_str, string_array_t *str_array, int index);
-
-bool str_array_cmp_char(char *char_str, string_array_t *str_array, int index);
-bool str_array_cmp_str(string_t *str, string_array_t *str_array, int index);
+char *get_str_charp(string_t *str);
+int get_sa_size(string_array_t *str_array);
+string_t *get_sa_index(string_array_t *str_array, int index);
+bool sa_cmp_charp(char *char_str, string_array_t *str_array, int index);
+bool sa_cmp(string_t *str, string_array_t *str_array, int index);
 
 void init_str(string_t **str, const char *str_literal);
+void init_va_str(string_t **str, int size, ...);
 void append_str(string_t *str, const char *str_value);
 void sub_str(string_t **str_dest, string_t *str_src, int start, int end, int step);
 void copy_str(string_t **str_dest, string_t *str_src);
@@ -49,6 +52,7 @@ void capitalize_str(string_t *str);
 void title_str(string_t *str);
 int int_str(string_t *str);
 double double_str(string_t *str);
+void free_charp(char *str);
 void free_str(string_t **str);
 void free_str_array(string_array_t **str_array);
 
