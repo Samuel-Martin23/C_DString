@@ -185,7 +185,7 @@ static int count_occurrences_in_str(const char *str_data, const char *value, int
 
 static void read_content(FILE *fp, string_t **str)
 {
-    init_str(str, "");
+    *str = new_str("");
     char source_file[MAX_CHARS];
 
     if (fp == NULL) 
@@ -232,21 +232,25 @@ void print_str_array(string_array_t *str_array, const char *beginning, const cha
     printf("\"%s\"}%s", str_array->data_set[i]->data, end);
 }
 
-void read_file_str(string_t **str, char *path)
+string_t *new_read_file_str(char *path)
 {
-    if (check_warnings(*str, STR_ALLOC, __func__) || *path == '\0')
+    if (*path == '\0')
     {
-        return;
+        return NULL;
     }
 
+    string_t *str = NULL;
+
     FILE *fp = fopen(path, "r");
-    read_content(fp, str);
+    read_content(fp, &str);
     fclose(fp);
+
+    return str;
 }
 
 void write_file_str(string_t *str, char *path, bool append_file)
 {
-    if (check_warnings(str, STR_ALLOC, __func__) || *path == '\0')
+    if (check_warnings(str, STR_NULL, __func__) || *path == '\0')
     {
         return;
     }
@@ -264,29 +268,31 @@ void write_file_str(string_t *str, char *path, bool append_file)
     fclose(fp);
 }
 
-void sys_output_str(string_t **str, char *cmd)
+string_t *new_sys_output_str(char *cmd)
 {
-    if (check_warnings(*str, STR_ALLOC, __func__) || *cmd == '\0')
+    if (*cmd == '\0')
     {
-        return;
+        return NULL;
     }
 
+    string_t *str = NULL;
+
     FILE *fp = popen(cmd, "r");
-    read_content(fp, str);
+    read_content(fp, &str);
     fclose(fp);
+
+    return str;
 }
 
-char *alloc_charp(char *charp)
+char *new_copy_charp(char *charp)
 {
     mem_usage.allocated += sizeof(char) * (size_t)(strlen(charp) + 1);
     return strdup(charp);
 }
 
-string_t *alloc_str(string_t *str)
+string_t *new_copy_str(string_t *str)
 {
-    string_t *new_str = NULL;
-    init_str(&new_str, str->data);
-    return new_str;
+    return new_str(str->data);
 }
 
 int get_str_size(string_t *str)
@@ -355,37 +361,38 @@ bool sa_cmp(string_t *str, string_array_t *str_array, int index)
     return !(strcmp(str->data, (str_array->data_set[index]->data)));
 }
 
-void init_str(string_t **str, const char *str_literal)
+string_t *new_str(const char *str_literal)
 {
-    if (check_warnings(*str, STR_ALLOC, __func__))
-    {
-        return;
-    }
+    string_t *str = NULL;
+    str = new_mem(sizeof(string_t));
+    str->size = (int)strlen(str_literal);
+    str->data = strdup(str_literal);
 
-    *str = new_mem(sizeof(string_t));
-    (*str)->size = (int)strlen(str_literal);
-    (*str)->data = strdup(str_literal);
-    mem_usage.allocated += sizeof(char) * (size_t)((*str)->size + 1);
+    mem_usage.allocated += sizeof(char) * (size_t)(str->size + 1);
+
+    return str;
 }
 
-void init_va_str(string_t **str, int size, ...)
+string_t *new_va_str(int size, ...)
 {
-    if (check_warnings(*str, STR_ALLOC, __func__) || size < 1)
+    if (size < 1)
     {
-        return;
+        return NULL;
     }
 
     va_list args;
     va_start(args, size);
 
-    init_str(str, va_arg(args, char*));
+    string_t *str = new_str(va_arg(args, char*));
 
     for (int i = 1; i < size; i++)
     {
-        append_str(*str, va_arg(args, char*));
+        append_str(str, va_arg(args, char*));
     }
 
     va_end(args);
+
+    return str;
 }
 
 void append_str(string_t *str, const char *str_value)
@@ -404,59 +411,49 @@ void append_str(string_t *str, const char *str_value)
     memcpy(&str->data[str->size-size], str_value, size+1);
 }
 
-void sub_str(string_t **str_dest, string_t *str_src, int start, int end, int step)
+string_t *new_sub_str(string_t *str_src, int start, int end, int step)
 {
-    if (check_warnings(*str_dest, STR_ALLOC, __func__)
-        || check_warnings(str_src, STR_NULL, __func__)
+    if (check_warnings(str_src, STR_NULL, __func__)
         || check_ranges(&start, &end, str_src->size, __func__))
     {
-        return;
+        return NULL;
     }
     else if (step <= 0)
     {
         printf("%s: %swarning:%sslice step cannot be less than or equal to zero%s\n", __func__, PURPLE, WHITE, RESET);
-        return;
+        return NULL;
     }
 
-    *str_dest = new_mem(sizeof(string_t));
+    string_t *str_dest = new_mem(sizeof(string_t));
 
     int step_counter = 0;
     int total_size = end - start;
     total_size = step >= total_size ? 1 : ceil_int(total_size, step);
 
-    (*str_dest)->data = new_mem(sizeof(char) * (size_t)(total_size+1));
-    (*str_dest)->size = total_size;
+    str_dest->data = new_mem(sizeof(char) * (size_t)(total_size+1));
+    str_dest->size = total_size;
 
     step--;
 
     for (int i = 0; i < total_size; i++)
     {
-        (*str_dest)->data[i] = str_src->data[i + start + step_counter];
+        str_dest->data[i] = str_src->data[i + start + step_counter];
         step_counter += step;
     }
 
-    (*str_dest)->data[(*str_dest)->size] = '\0';
+    str_dest->data[str_dest->size] = '\0';
+
+    return str_dest;
 }
 
-void copy_str(string_t **str_dest, string_t *str_src)
-{
-    if (check_warnings(*str_dest, STR_ALLOC, __func__)
-        || (check_warnings(str_src, STR_NULL, __func__)))
-    {
-        return;
-    }
-
-    sub_str(str_dest, str_src, 0, 0, 1);
-}
-
-void replace_str(string_t *str, const char *old_str, const char *new_str, int count)
+void replace_str(string_t *str, const char *prev_charp, const char *latest_charp, int count)
 {
     if (check_warnings(str, STR_NULL, __func__))
     {
         return;
     }
 
-    int num_of_occurrences = count_occurrences_in_str(str->data, old_str, count, 0, str->size);
+    int num_of_occurrences = count_occurrences_in_str(str->data, prev_charp, count, 0, str->size);
 
     if (num_of_occurrences == 0)
     {
@@ -466,21 +463,21 @@ void replace_str(string_t *str, const char *old_str, const char *new_str, int co
 
     int i = 0;
     int num_of_replacements = 0;
-    int new_str_size = (int)strlen(new_str);
-    int old_str_size = (int)strlen(old_str);
-    int total_size = ((str->size - (old_str_size * num_of_occurrences)) + (new_str_size * num_of_occurrences));
+    int prev_charp_size = (int)strlen(prev_charp);
+    int latest_charp_size = (int)strlen(latest_charp);
+    int total_size = ((str->size - (prev_charp_size  * num_of_occurrences)) + (latest_charp_size * num_of_occurrences));
 
     const char *copy_str_data = str->data;
     char *replace_str = new_mem(sizeof(char) * (size_t)(total_size + 1));
 
     while (*copy_str_data != '\0')
     {
-        if (num_of_replacements < num_of_occurrences && strstr(copy_str_data, old_str) == copy_str_data)
+        if (num_of_replacements < num_of_occurrences && strstr(copy_str_data, prev_charp) == copy_str_data)
         {
-            memcpy(&replace_str[i], new_str, new_str_size);
+            memcpy(&replace_str[i], latest_charp, latest_charp_size);
             num_of_replacements++;
-            i += new_str_size;
-            copy_str_data += old_str_size;
+            i += latest_charp_size;
+            copy_str_data += prev_charp_size;
         }
         else
         {
@@ -525,24 +522,24 @@ void erase_str_index(string_t *str, int start, int end)
     }
 
     int j = 0;
-    int new_str_size = str->size - (end - start);
-    char *new_str = new_mem(sizeof(char) * (size_t)(new_str_size + 1));
+    int alloc_charp_size = str->size - (end - start);
+    char *alloc_charp = new_mem(sizeof(char) * (size_t)(alloc_charp_size + 1));
 
     for (int i = 0; i < str->size; i++)
     {
         if (!(i >= start && i < end))
         {
-            new_str[j] = str->data[i];
+            alloc_charp[j] = str->data[i];
             j++;
         }
     }
 
-    new_str[new_str_size] = '\0';
+    alloc_charp[alloc_charp_size] = '\0';
 
     free_mem(str->data, sizeof(char) * (size_t)(str->size + 1));
 
-    str->data = new_str;
-    str->size = new_str_size;
+    str->data = alloc_charp;
+    str->size = alloc_charp_size;
 }
 
 int find_str(string_t *str, const char *value)
@@ -575,24 +572,24 @@ void lstrip_str(string_t *str, char *characters)
         return;
     }
 
-    int new_str_size = str->size;
+    int alloc_charp_size = str->size;
     char *str_data = str->data;
 
     while (check_str_occurrences(characters, *str_data))
     {
-        new_str_size--;
+        alloc_charp_size--;
         str_data++;
     }
 
     if (*str_data != '\0')
     {
-        char *new_str = new_mem(sizeof(char) * (size_t)(new_str_size + 1));
-        memcpy(new_str, str_data, new_str_size+1);
+        char *alloc_charp = new_mem(sizeof(char) * (size_t)(alloc_charp_size + 1));
+        memcpy(alloc_charp, str_data, alloc_charp_size+1);
 
         free_mem(str->data, sizeof(char) * (size_t)(str->size + 1));
 
-        str->data = new_str;
-        str->size = new_str_size;
+        str->data = alloc_charp;
+        str->size = alloc_charp_size;
     }
 }
 
@@ -603,25 +600,25 @@ void rstrip_str(string_t *str, char *characters)
         return;
     }
 
-    int new_str_size = str->size;
-    const char *forward = str->data + new_str_size;
+    int alloc_charp_size = str->size;
+    const char *forward = str->data + alloc_charp_size;
 
     while (check_str_occurrences(characters, (*(forward-1))))
     { 
         forward--;
-        new_str_size--;
+        alloc_charp_size--;
     }
 
     if (*forward != '\0')
     {
-        char *new_str = new_mem(sizeof(char) * (size_t)(new_str_size + 1));
-        memcpy(new_str, str->data, new_str_size);
-        new_str[new_str_size] = '\0';
+        char *alloc_charp = new_mem(sizeof(char) * (size_t)(alloc_charp_size + 1));
+        memcpy(alloc_charp, str->data, alloc_charp_size);
+        alloc_charp[alloc_charp_size] = '\0';
 
         free_mem(str->data, sizeof(char) * (size_t)(str->size + 1));
 
-        str->data = new_str;
-        str->size = new_str_size;
+        str->data = alloc_charp;
+        str->size = alloc_charp_size;
     }
 }
 
@@ -647,40 +644,37 @@ void strip_str_chars(string_t *str, char *characters)
     rstrip_str(str, characters);
 }
 
-void split_str(string_array_t **str_array, string_t *str, char *separator, int max_split)
+string_array_t *new_split_str(string_t *str, char *separator, int max_split)
 {
-    if (*str_array != NULL)
+    if (check_warnings(str, STR_NULL, __func__))
     {
-        printf("%s: %serror:%s string_array is not NULL%s\n", __func__, RED, WHITE, RESET);
-        exit(1);
-    }
-    else if (check_warnings(str, STR_NULL, __func__))
-    {
-        return;
+        return NULL;
     }
 
     int i = 0;
     char *split_str = "";
-    char *alloc_str = strdup(str->data);
-    char *str_data = alloc_str;
+    char *alloc_charp = strdup(str->data);
+    char *str_data = alloc_charp;
     int num_of_occurrences = count_occurrences_in_str(str->data, separator, max_split, 0, str->size);
 
     mem_usage.allocated += sizeof(char) * (size_t)(str->size + 1);
 
-    *str_array = new_mem(sizeof(string_array_t));
-    (*str_array)->size = num_of_occurrences + 1;
-    (*str_array)->data_set = new_mem((size_t)(*str_array)->size * sizeof(string_t*));
-    str_array_null_init(*str_array);
+    string_array_t *str_array = new_mem(sizeof(string_array_t));
+    str_array->size = num_of_occurrences + 1;
+    str_array->data_set = new_mem((size_t)str_array->size * sizeof(string_t*));
+    str_array_null_init(str_array);
 
     while (i < num_of_occurrences)
     {
         split_str = strsep_m(&str_data, separator);
-        init_str(&(*str_array)->data_set[i], split_str);
+        str_array->data_set[i] = new_str(split_str);
         i++;
     }
 
-    init_str(&(*str_array)->data_set[i], str_data);
-    free_mem(alloc_str, sizeof(char) * (size_t)(str->size + 1));
+    str_array->data_set[i] = new_str(str_data);
+    free_mem(alloc_charp, sizeof(char) * (size_t)(str->size + 1));
+
+    return str_array;
 }
 
 void upper_str(string_t *str)
@@ -791,9 +785,10 @@ double double_str(string_t *str)
     return atof(str->data);
 }
 
-void free_charp(char *str)
+void free_charp(char **charp)
 {
-    free_mem(str, sizeof(char) * (strlen(str)+1));
+    free_mem(*charp, sizeof(char) * (strlen(*charp)+1));
+    *charp = NULL;
 }
 
 void free_str(string_t **str)
