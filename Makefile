@@ -2,7 +2,7 @@ CC = clang
 flags = -Wall -Wextra -Wconversion -Wunreachable-code -Wnewline-eof -Wno-error=unused-variable -Wshadow -Wfloat-equal -Wcovered-switch-default -Wunreachable-code-break
 
 object_files = main.o c_string.o
-allocation_metrics_dir = ../C_Data_Structures/C_Allocation_Metrics/
+allocation_metrics_dir = ../C_Allocation_Metrics/
 name_of_executable = program
 
 allocation_metrics_lib = -Wl,-rpath,$(allocation_metrics_dir) -L$(allocation_metrics_dir) -lallocation_metrics
