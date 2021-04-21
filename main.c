@@ -2,19 +2,15 @@
 
 int main()
 {
-    string_t *last_name = NULL;
-    string_t *full_name = NULL;
-    string_array_t *split_name = NULL;
-
-    init_str(&full_name, "  \nSamuel\n  ");
-
+    string_t *full_name = alloc_str( "  \nSamuel\n  ");
     strip_str(full_name);
     append_str(full_name, " Martin");
 
-    sub_str(&last_name, full_name, 7, 0, 1);
+    int start = 7;
+    string_t *last_name = alloc_sub_str(full_name, &start, NULL, NULL);
 
     erase_str(full_name, "tin");
-    split_str(&split_name, full_name, "a", 0);
+    string_array_t *split_name = alloc_split_str(full_name, "a", 0);
 
     free_str(&last_name);
     free_str(&full_name);
