@@ -33,7 +33,7 @@ string_t *alloc_str(const char *value);
 string_t *alloc_va_str(int size, ...);
 void append_str(string_t *str, const char *value);
 void append_va_str(string_t *str, int size, ...);
-string_t *alloc_sub_str(string_t *str, int start, int end, int step);
+string_t *alloc_sub_str(string_t *str, const char *start_opt, const char *end_opt, const char *step_opt);
 void replace_str(string_t *str, const char *old, const char *new);
 void replace_str_count(string_t *str, const char *old, const char *new, int count);
 void erase_str(string_t *str, const char *value);

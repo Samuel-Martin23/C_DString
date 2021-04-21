@@ -91,6 +91,67 @@ static bool check_index(int *index, int size, const char *function_name)
     return false;
 }
 
+static int get_start_index(const char *start_opt, bool is_step_neg, int size)
+{
+    if (!(strcmp(start_opt, ":")))
+    {
+        return is_step_neg ? (size - 1) : 0;
+    }
+
+    int start = atoi(start_opt);
+
+    if (start < 0)
+    {
+        start += size;
+    }
+
+    return start;
+}
+
+static int get_end_index(const char *end_opt, bool is_step_neg, int size)
+{
+    if (!(strcmp(end_opt, ":")))
+    {
+        return is_step_neg ? -1 : size;
+    }
+
+    int end = atoi(end_opt);
+
+    if (end < 0)
+    {
+        end += size;
+    }
+    else if (end >= size)
+    {
+        end = size;
+    }
+
+    return end;
+}
+
+static int get_ranges(const char *options[], int step, int size, int *start, int *end)
+{
+    bool is_step_neg = (step < 0);
+    *start = get_start_index(options[1], is_step_neg, size);
+    *end = get_end_index(options[2], is_step_neg, size);
+
+    if (*start < 0 || *end > size)
+    {
+        printf("%s: %swarning:%s indices are out of range%s\n", options[0], PURPLE, WHITE, RESET);
+        return 0;
+    }
+
+    int sub_str_size = is_step_neg ? (*start - *end) : (*end - *start);
+
+    if (sub_str_size <= 0)
+    {
+        printf("%s: %swarning:%s indices are out of range%s\n", options[0], PURPLE, WHITE, RESET);
+        return 0;
+    }
+
+    return sub_str_size;
+}
+
 static bool check_ranges(int *start, int *end, int size, const char *function_name)
 {
     if (*start >= size || *end >= size)
@@ -453,34 +514,42 @@ void append_va_str(string_t *str, int size, ...)
     va_end(args);
 }
 
-string_t *alloc_sub_str(string_t *str, int start, int end, int step)
+string_t *alloc_sub_str(string_t *str, const char *start_opt, const char *end_opt, const char *step_opt)
 {
-    if (check_warnings(str, STR_NULL, __func__)
-        || check_ranges(&start, &end, str->size, __func__))
+    int step = atoi(step_opt);
+
+    if (step == 0)
     {
-        return NULL;
-    }
-    else if (step <= 0)
-    {
-        printf("%s: %swarning:%sslice step cannot be less than or equal to zero%s\n", __func__, PURPLE, WHITE, RESET);
+        printf("%s: %swarning:%s slice step cannot be equal to zero%s\n", __func__, PURPLE, WHITE, RESET);
         return NULL;
     }
 
+    int start = 0;
+    int end = 0;
+    const char *options[] = {__func__, start_opt, end_opt};
+    int size = get_ranges(options, step, str->size, &start, &end);
     string_t *sub_str = alloc_mem(sizeof(string_t));
 
-    int step_counter = 0;
-    int total_size = end - start;
-    total_size = step >= total_size ? 1 : ceil_int(total_size, step);
-
-    sub_str->data = new_mem(sizeof(char) * (size_t)(total_size+1));
-    sub_str->size = total_size;
-
-    step--;
-
-    for (int i = 0; i < total_size; i++)
+    if (check_warnings(str, STR_NULL, __func__) || !(size))
     {
-        sub_str->data[i] = str->data[i + start + step_counter];
-        step_counter += step;
+        sub_str->size = 0;
+        sub_str->data = alloc_mem(sizeof(char) * 1ul);
+        sub_str->data[0] = '\0';
+        return sub_str;
+    }
+
+    int j = 0;
+    int abs_step = abs(step);
+
+    size = abs_step >= size ? 1 : ceil_int(size, abs_step);
+    sub_str->size = size;
+    sub_str->data = alloc_mem(sizeof(char) * (size_t)(sub_str->size+1));
+
+    for (int i = 0; i < sub_str->size; i++)
+    {
+        sub_str->data[j] = str->data[start];
+        j++;
+        start += step;
     }
 
     sub_str->data[sub_str->size] = '\0';
