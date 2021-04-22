@@ -1,10 +1,10 @@
-#ifndef C_STRING
-#define C_STRING
+#ifndef D_STRING
+#define D_STRING
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include <strings.h>
+#include <string.h>
 #include <ctype.h>
 #include <math.h>
 #include <stdarg.h>
@@ -58,4 +58,4 @@ void free_c_str(char **curr);
 void free_str(string_t **str);
 void free_str_array(string_array_t **str_array);
 
-#endif /* C_STRING */
+#endif /* D_STRING */

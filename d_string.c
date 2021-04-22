@@ -1,4 +1,4 @@
-#include "c_string.h"
+#include "d_string.h"
 
 #define STR_NULL                    0x00000001u
 #define STR_ALLOC                   0x00000002u
@@ -732,7 +732,7 @@ void rstrip_str(string_t *str, const char *characters)
     const char *forward = str->data + striped_size;
 
     while (check_str_occurrences(characters, (*(forward-1))))
-    { 
+    {
         forward--;
         striped_size--;
     }
