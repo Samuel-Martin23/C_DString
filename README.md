@@ -1,2 +1,2 @@
-# C_String
- Implements string functions from Python in C.
+# D_String
+Implements string functions from Python in C.
