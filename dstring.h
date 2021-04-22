@@ -1,5 +1,5 @@
-#ifndef D_STRING_H
-#define D_STRING_H
+#ifndef DSTRING_H
+#define DSTRING_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -58,4 +58,4 @@ void free_c_str(char **curr);
 void free_str(string_t **str);
 void free_str_array(string_array_t **str_array);
 
-#endif /* D_STRING_H */
+#endif /* DSTRING_H */

@@ -1,4 +1,4 @@
-#include "d_string.h"
+#include "dstring.h"
 
 int main()
 {

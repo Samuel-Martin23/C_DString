@@ -1,4 +1,4 @@
-#include "d_string.h"
+#include "dstring.h"
 
 #define STR_NULL                    0x00000001u
 #define STR_ALLOC                   0x00000002u

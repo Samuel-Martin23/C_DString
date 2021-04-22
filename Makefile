@@ -1,7 +1,7 @@
 CC = clang
 flags = -Wall -Wextra -Wconversion -Wunreachable-code -Wnewline-eof -Wno-error=unused-variable -Wshadow -Wfloat-equal -Wcovered-switch-default -Wunreachable-code-break
 
-object_files = main.o d_string.o
+object_files = main.o dstring.o
 allocation_metrics_dir = ../C_Allocation_Metrics/
 name_of_executable = program
 
@@ -13,8 +13,8 @@ $(name_of_executable): $(object_files)
 main.o: main.c
 	$(CC) $(flags) -c $^ -o $@
 
-d_string.o: d_string.c d_string.h
-	$(CC) $(flags) -c d_string.c -o $@
+dstring.o: dstring.c dstring.h
+	$(CC) $(flags) -c dstring.c -o $@
 
 clean:
 	rm *.o $(name_of_executable)
