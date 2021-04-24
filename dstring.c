@@ -209,17 +209,15 @@ static int count_occurrences_in_str(const char *curr, const char *search_val, in
         return 0;
     }
 
-    int i = 0;
     int occurrences = 0;
     int search_val_size = (int)strlen(search_val);
     curr = strstr(curr + start, search_val);
 
-    while (curr != NULL && i < end)
+    while (curr != NULL && occurrences < end)
     {
         curr += search_val_size;
         curr = strstr(curr, search_val);
         occurrences++;
-        i++;
     }
 
     if (count > 0 && count < occurrences)
@@ -232,7 +230,7 @@ static int count_occurrences_in_str(const char *curr, const char *search_val, in
 
 static void read_content(FILE *fp, string_t **str)
 {
-    *str = alloc_str("");
+    *str = str_alloc("");
     char source_file[MAX_CHARS];
 
     if (fp == NULL) 
@@ -245,7 +243,7 @@ static void read_content(FILE *fp, string_t **str)
     {
         if (fgets(source_file, MAX_CHARS, fp) != NULL)
         {
-            append_str(*str, source_file);
+            str_append(*str, source_file);
         }
     }
 }
@@ -267,22 +265,22 @@ static string_array_t *split_str(const char *curr, int size, char *separator, in
     while (i < num_of_occurrences)
     {
         split = strsep_m(&copy_curr, separator);
-        str_array->data_set[i] = alloc_str(split);
+        str_array->data_set[i] = str_alloc(split);
         i++;
     }
 
-    str_array->data_set[i] = alloc_str(copy_curr);
+    str_array->data_set[i] = str_alloc(copy_curr);
     free_mem(curr_alloc, sizeof(char) * (size_t)(size + 1));
 
     return str_array;
 }
 
-static void free_str_data(string_t *str)
+static void str_data_free(string_t *str)
 {
     free_mem(str->data, sizeof(char) * (size_t)(str->size + 1));
 }
 
-void print_str(string_t *str, const char *beginning, const char *end)
+void str_print(string_t *str, const char *beginning, const char *end)
 {
     if (check_warnings(str, STR_NULL, __func__))
     {
@@ -292,7 +290,7 @@ void print_str(string_t *str, const char *beginning, const char *end)
     printf("%s%s%s", beginning, str->data, end);
 }
 
-void print_str_array(string_array_t *str_array, const char *beginning, const char *end)
+void str_array_print(string_array_t *str_array, const char *beginning, const char *end)
 {
     if (str_array == NULL)
     {
@@ -311,7 +309,7 @@ void print_str_array(string_array_t *str_array, const char *beginning, const cha
     printf("\"%s\"}%s", str_array->data_set[i]->data, end);
 }
 
-string_t *alloc_read_file_str(const char *path)
+string_t *str_alloc_read_file(const char *path)
 {
     if (*path == '\0')
     {
@@ -327,7 +325,7 @@ string_t *alloc_read_file_str(const char *path)
     return str;
 }
 
-void write_file_str(string_t *str, const char *path, bool append_file)
+void str_write_file(string_t *str, const char *path, bool append_file)
 {
     if (check_warnings(str, STR_NULL, __func__) || *path == '\0')
     {
@@ -347,7 +345,7 @@ void write_file_str(string_t *str, const char *path, bool append_file)
     fclose(fp);
 }
 
-string_t *alloc_sys_output_str(const char *cmd)
+string_t *str_alloc_sys_output(const char *cmd)
 {
     if (*cmd == '\0')
     {
@@ -363,15 +361,15 @@ string_t *alloc_sys_output_str(const char *cmd)
     return str;
 }
 
-char *alloc_copy_c_str(const char *c_str)
+char *c_str_alloc_copy(const char *c_str)
 {
     mem_usage.allocated += sizeof(char) * (size_t)(strlen(c_str) + 1);
     return strdup(c_str);
 }
 
-string_t *alloc_copy_str(string_t *str)
+string_t *str_alloc_copy(string_t *str)
 {
-    return alloc_str(str->data);
+    return str_alloc(str->data);
 }
 
 int get_str_size(string_t *str)
@@ -440,7 +438,7 @@ bool sa_cmp_str(string_t *str, string_array_t *str_array, int index)
     return !(strcmp(str->data, (str_array->data_set[index]->data)));
 }
 
-string_t *alloc_str(const char *value)
+string_t *str_alloc(const char *value)
 {
     string_t *str = NULL;
     str = alloc_mem(sizeof(string_t));
@@ -452,7 +450,7 @@ string_t *alloc_str(const char *value)
     return str;
 }
 
-string_t *alloc_va_str(int size, ...)
+string_t *str_alloc_va(int size, ...)
 {
     if (size < 1)
     {
@@ -462,11 +460,11 @@ string_t *alloc_va_str(int size, ...)
     va_list args;
     va_start(args, size);
 
-    string_t *str = alloc_str(va_arg(args, char*));
+    string_t *str = str_alloc(va_arg(args, char*));
 
     for (int i = 1; i < size; i++)
     {
-        append_str(str, va_arg(args, char*));
+        str_append(str, va_arg(args, char*));
     }
 
     va_end(args);
@@ -474,7 +472,7 @@ string_t *alloc_va_str(int size, ...)
     return str;
 }
 
-void append_str(string_t *str, const char *value)
+void str_append(string_t *str, const char *value)
 {
     if (check_warnings(str, STR_NULL, __func__))
     {
@@ -490,7 +488,7 @@ void append_str(string_t *str, const char *value)
     memcpy(&str->data[str->size-size], value, size+1);
 }
 
-void append_va_str(string_t *str, int size, ...)
+void str_append_va(string_t *str, int size, ...)
 {
     if (check_warnings(str, STR_NULL, __func__) || size < 1)
     {
@@ -502,13 +500,13 @@ void append_va_str(string_t *str, int size, ...)
 
     for (int i = 0; i < size; i++)
     {
-        append_str(str, va_arg(args, char*));
+        str_append(str, va_arg(args, char*));
     }
 
     va_end(args);
 }
 
-string_t *alloc_sub_str(string_t *str, int *start_opt, int *end_opt, int *step_opt)
+string_t *str_alloc_substr(string_t *str, int *start_opt, int *end_opt, int *step_opt)
 {
     if (check_warnings(str, STR_NULL, __func__))
     {
@@ -545,7 +543,6 @@ string_t *alloc_sub_str(string_t *str, int *start_opt, int *end_opt, int *step_o
         return sub_str;
     }
 
-    int j = 0;
     int abs_step = abs(step);
 
     size = abs_step >= size ? 1 : ceil_int(size, abs_step);
@@ -554,8 +551,7 @@ string_t *alloc_sub_str(string_t *str, int *start_opt, int *end_opt, int *step_o
 
     for (int i = 0; i < sub_str->size; i++)
     {
-        sub_str->data[j] = str->data[start];
-        j++;
+        sub_str->data[i] = str->data[start];
         start += step;
     }
 
@@ -564,17 +560,17 @@ string_t *alloc_sub_str(string_t *str, int *start_opt, int *end_opt, int *step_o
     return sub_str;
 }
 
-void replace_str(string_t *str, const char *old, const char *new)
+void str_replace(string_t *str, const char *old, const char *new)
 {
     if (check_warnings(str, STR_NULL, __func__))
     {
         return;
     }
 
-    replace_str_count(str, old, new, 0);
+    str_replace_count(str, old, new, 0);
 }
 
-void replace_str_count(string_t *str, const char *old, const char *new, int count)
+void str_replace_count(string_t *str, const char *old, const char *new, int count)
 {
     if (check_warnings(str, STR_NULL, __func__))
     {
@@ -615,33 +611,33 @@ void replace_str_count(string_t *str, const char *old, const char *new, int coun
 
     replacement[i] = '\0';
 
-    free_str_data(str);
+    str_data_free(str);
 
     str->size = total_size;
     str->data = replacement;
 }
 
-void erase_str(string_t *str, const char *value)
+void str_erase(string_t *str, const char *value)
 {
     if (check_warnings(str, STR_NULL, __func__))
     {
         return;
     }
 
-    replace_str_count(str, value, "", 0);
+    str_replace_count(str, value, "", 0);
 }
 
-void erase_str_count(string_t *str, const char *value, int count)
+void str_erase_count(string_t *str, const char *value, int count)
 {
     if (check_warnings(str, STR_NULL, __func__))
     {
         return;
     }
 
-    replace_str_count(str, value, "", count);
+    str_replace_count(str, value, "", count);
 }
 
-void erase_str_index(string_t *str, int start, int end)
+void str_erase_index(string_t *str, int start, int end)
 {
     if (check_warnings(str, STR_NULL, __func__)
         || check_ranges(&start, &end, str->size, __func__))
@@ -664,13 +660,13 @@ void erase_str_index(string_t *str, int start, int end)
 
     conjoin[conjoin_size] = '\0';
 
-    free_str_data(str);
+    str_data_free(str);
 
     str->data = conjoin;
     str->size = conjoin_size;
 }
 
-int find_str(string_t *str, const char *search_val)
+int str_find(string_t *str, const char *search_val)
 {
     if (check_warnings(str, STR_NULL, __func__))
     {
@@ -682,7 +678,7 @@ int find_str(string_t *str, const char *search_val)
     return found ? (int)(found - str->data) : -1;
 }
 
-int count_str(string_t *str, const char *search_val, int start, int end)
+int str_count(string_t *str, const char *search_val, int start, int end)
 {
     if (check_warnings(str, STR_NULL, __func__) || *search_val == '\0' 
         || check_ranges(&start, &end, str->size, __func__))
@@ -693,7 +689,7 @@ int count_str(string_t *str, const char *search_val, int start, int end)
     return count_occurrences_in_str(str->data, search_val, 0, start, end);
 }
 
-void lstrip_str(string_t *str, const char *characters)
+void str_lstrip(string_t *str, const char *characters)
 {
     if (check_warnings(str, STR_NULL, __func__))
     {
@@ -714,14 +710,14 @@ void lstrip_str(string_t *str, const char *characters)
         char *striped = alloc_mem(sizeof(char) * (size_t)(striped_size + 1));
         memcpy(striped, copy, striped_size+1);
 
-        free_str_data(str);
+        str_data_free(str);
 
         str->data = striped;
         str->size = striped_size;
     }
 }
 
-void rstrip_str(string_t *str, const char *characters)
+void str_rstrip(string_t *str, const char *characters)
 {
     if (check_warnings(str, STR_NULL, __func__))
     {
@@ -743,36 +739,36 @@ void rstrip_str(string_t *str, const char *characters)
         memcpy(striped, str->data, striped_size);
         striped[striped_size] = '\0';
 
-        free_str_data(str);
+        str_data_free(str);
 
         str->data = striped;
         str->size = striped_size;
     }
 }
 
-void strip_str(string_t *str)
+void str_strip(string_t *str)
 {
     if (check_warnings(str, STR_NULL, __func__))
     {
         return;
     }
 
-    lstrip_str(str, "\n ");
-    rstrip_str(str, "\n ");
+    str_lstrip(str, "\n ");
+    str_rstrip(str, "\n ");
 }
 
-void strip_str_chars(string_t *str, char *characters)
+void str_strip_chars(string_t *str, char *characters)
 {
     if (check_warnings(str, STR_NULL, __func__))
     {
         return;
     }
 
-    lstrip_str(str, characters);
-    rstrip_str(str, characters);
+    str_lstrip(str, characters);
+    str_rstrip(str, characters);
 }
 
-string_array_t *alloc_split_str(string_t *str, char *separator, int max_split)
+string_array_t *str_alloc_split(string_t *str, char *separator, int max_split)
 {
     if (check_warnings(str, STR_NULL, __func__))
     {
@@ -782,7 +778,7 @@ string_array_t *alloc_split_str(string_t *str, char *separator, int max_split)
     return split_str(str->data, str->size, separator, max_split);
 }
 
-string_array_t *alloc_split_c_str(const char *curr, char *separator, int max_split)
+string_array_t *str_alloc_split_c_str(const char *curr, char *separator, int max_split)
 {
     if (curr == NULL)
     {
@@ -792,7 +788,7 @@ string_array_t *alloc_split_c_str(const char *curr, char *separator, int max_spl
     return split_str(curr, (int)strlen(curr), separator, max_split);
 }
 
-void upper_str(string_t *str)
+void str_upper(string_t *str)
 {
     if (check_warnings(str, STR_NULL, __func__))
     {
@@ -808,7 +804,7 @@ void upper_str(string_t *str)
     }
 }
 
-void lower_str(string_t *str)
+void str_lower(string_t *str)
 {
     if (check_warnings(str, STR_NULL, __func__))
     {
@@ -824,7 +820,7 @@ void lower_str(string_t *str)
     }
 }
 
-void swapcase_str(string_t *str)
+void str_swapcase(string_t *str)
 {
     if (check_warnings(str, STR_NULL, __func__))
     {
@@ -840,7 +836,7 @@ void swapcase_str(string_t *str)
     }
 }
 
-void capitalize_str(string_t *str)
+void str_capitalize(string_t *str)
 {  
     if (check_warnings(str, STR_NULL, __func__))
     {
@@ -850,14 +846,14 @@ void capitalize_str(string_t *str)
     str->data[0] = (char)toupper(str->data[0]);
 }
 
-void title_str(string_t *str)
+void str_title(string_t *str)
 {
     if (check_warnings(str, STR_NULL, __func__))
     {
         return;
     }
 
-    capitalize_str(str);
+    str_capitalize(str);
 
     for (int i = (str->size-1); i > 0; i--)
     {
@@ -868,7 +864,7 @@ void title_str(string_t *str)
     }
 }
 
-int int_str(string_t *str)
+int str_int(string_t *str)
 {
     if (check_warnings(str, STR_NULL, __func__))
     {
@@ -878,7 +874,7 @@ int int_str(string_t *str)
     return atoi(str->data);
 }
 
-double double_str(string_t *str)
+double str_double(string_t *str)
 {
     if (check_warnings(str, STR_NULL, __func__))
     {
@@ -888,25 +884,25 @@ double double_str(string_t *str)
     return atof(str->data);
 }
 
-void free_c_str(char **curr)
+void c_str_free(char **curr)
 {
     free_mem(*curr, sizeof(char) * (strlen(*curr)+1));
     *curr = NULL;
 }
 
-void free_str(string_t **str)
+void str_free(string_t **str)
 {
     if (check_warnings(*str, STR_NULL, __func__))
     {
         return;
     }
 
-    free_str_data(*str);
+    str_data_free(*str);
     free_mem(*str, sizeof(string_t));
     *str = NULL;
 }
 
-void free_str_array(string_array_t **str_array)
+void str_array_free(string_array_t **str_array)
 {
     if (*str_array == NULL)
     {
@@ -916,7 +912,7 @@ void free_str_array(string_array_t **str_array)
 
     for (int i = 0; i < (*str_array)->size; i++)
     {
-        free_str(&(*str_array)->data_set[i]);
+        str_free(&(*str_array)->data_set[i]);
     }
 
     free_mem((*str_array)->data_set, (size_t)(*str_array)->size * sizeof(string_t*));
