@@ -53,24 +53,24 @@ static bool check_warnings(string_t *str, u_int16_t warning_code, const char *fu
     return false;
 }
 
-static char *strsep_m(char **value, char *separator) 
+static char *strsep_m(char **data, char *separator) 
 {
-    if (*value == NULL)
+    if (*data == NULL)
     {
-        return *value;
+        return *data;
     }
 
-    char *end = strstr(*value, separator);
-    char *temp = *value;
+    char *end = strstr(*data, separator);
+    char *temp = *data;
 
     if (end == NULL)
     {
-        *value = NULL;
+        *data = NULL;
         return temp;
     }
 
     *end = '\0';
-    *value = end + strlen(separator);
+    *data = end + strlen(separator);
 
     return temp;
 }
@@ -275,104 +275,7 @@ static string_array_t *split_str(const char *curr, int size, char *separator, in
     return str_array;
 }
 
-static void str_data_free(string_t *str)
-{
-    free_mem(str->data, sizeof(char) * (size_t)(str->size + 1));
-}
-
-void str_print(string_t *str, const char *beginning, const char *end)
-{
-    if (check_warnings(str, STR_NULL, __func__))
-    {
-        return;
-    }
-
-    printf("%s%s%s", beginning, str->data, end);
-}
-
-void str_array_print(string_array_t *str_array, const char *beginning, const char *end)
-{
-    if (str_array == NULL)
-    {
-        printf("%s: %swarning:%s string_array is NULL%s\n", __func__, PURPLE, WHITE, RESET);
-        return;
-    }
-
-    int i = 0;
-    printf("%s{", beginning);
-
-    for (i = 0; i < (str_array->size-1); i++)
-    {
-        printf("\"%s\", ", str_array->data_set[i]->data);
-    }
-
-    printf("\"%s\"}%s", str_array->data_set[i]->data, end);
-}
-
-string_t *str_alloc_read_file(const char *path)
-{
-    if (*path == '\0')
-    {
-        return NULL;
-    }
-
-    string_t *str = NULL;
-
-    FILE *fp = fopen(path, "r");
-    read_content(fp, &str);
-    fclose(fp);
-
-    return str;
-}
-
-void str_write_file(string_t *str, const char *path, bool append_file)
-{
-    if (check_warnings(str, STR_NULL, __func__) || *path == '\0')
-    {
-        return;
-    }
-
-    const char *write_opt = append_file ? "a" : "w";
-    FILE *fp = fopen(path, write_opt);
-
-    if (fp == NULL) 
-    {
-        printf("%s: %swarning:%s failed to write content%s\n", __func__, PURPLE, WHITE, RESET);
-        return;
-    }
-
-    fprintf(fp, "%s", str->data);
-    fclose(fp);
-}
-
-string_t *str_alloc_sys_output(const char *cmd)
-{
-    if (*cmd == '\0')
-    {
-        return NULL;
-    }
-
-    string_t *str = NULL;
-
-    FILE *fp = popen(cmd, "r");
-    read_content(fp, &str);
-    fclose(fp);
-
-    return str;
-}
-
-char *c_str_alloc_copy(const char *c_str)
-{
-    mem_usage.allocated += sizeof(char) * (size_t)(strlen(c_str) + 1);
-    return strdup(c_str);
-}
-
-string_t *str_alloc_copy(string_t *str)
-{
-    return str_alloc(str->data);
-}
-
-int get_str_size(string_t *str)
+int str_get_size(string_t *str)
 {
     if (check_warnings(str, STR_NULL, __func__))
     {
@@ -382,7 +285,7 @@ int get_str_size(string_t *str)
     return str->size;
 }
 
-char *get_str_c_str(string_t *str)
+char *str_get_literal(string_t *str)
 {
     if (check_warnings(str, STR_NULL, __func__))
     {
@@ -392,7 +295,27 @@ char *get_str_c_str(string_t *str)
     return str->data;
 }
 
-int get_sa_size(string_array_t *str_array)
+void str_set_size(string_t *str, int size)
+{
+    if (check_warnings(str, STR_NULL, __func__))
+    {
+        return;
+    }
+
+    str->size = size;
+}
+
+void str_set_literal(string_t *str, char *data)
+{
+    if (check_warnings(str, STR_NULL, __func__))
+    {
+        return;
+    }
+
+    str->data = data;
+}
+
+int sa_get_size(string_array_t *str_array)
 {
     if (str_array == NULL)
     {
@@ -403,7 +326,7 @@ int get_sa_size(string_array_t *str_array)
     return str_array->size;
 }
 
-string_t *get_sa_index(string_array_t *str_array, int index)
+string_t *sa_get_index(string_array_t *str_array, int index)
 {
     if (check_index(&index, str_array->size, __func__))
     {
@@ -418,32 +341,38 @@ string_t *get_sa_index(string_array_t *str_array, int index)
     return str_array->data_set[index];
 }
 
-bool sa_cmp_c_str(const char *char_str, string_array_t *str_array, int index)
+void sa_set_size(string_array_t *str_array, int size)
+{
+    if (str_array == NULL)
+    {
+        printf("%s: %swarning:%s string_array is NULL%s\n", __func__, PURPLE, WHITE, RESET);
+        return;
+    }
+
+    str_array->size = size;
+}
+
+void sa_set_index(string_array_t *str_array, int index, string_t *str)
 {
     if (check_index(&index, str_array->size, __func__))
     {
-        return false;
+        return;
     }
-
-    return !(strcmp(char_str, (str_array->data_set[index]->data)));
-}
-
-bool sa_cmp_str(string_t *str, string_array_t *str_array, int index)
-{
-    if (check_index(&index, str_array->size, __func__))
+    else if (str_array == NULL)
     {
-        return false;
+        printf("%s: %swarning:%s string_array is NULL%s\n", __func__, PURPLE, WHITE, RESET);
+        return;
     }
 
-    return !(strcmp(str->data, (str_array->data_set[index]->data)));
+    str_array->data_set[index] = str;
 }
 
-string_t *str_alloc(const char *value)
+string_t *str_alloc(const char *data)
 {
     string_t *str = NULL;
     str = alloc_mem(sizeof(string_t));
-    str->size = (int)strlen(value);
-    str->data = strdup(value);
+    str->size = (int)strlen(data);
+    str->data = strdup(data);
 
     mem_usage.allocated += sizeof(char) * (size_t)(str->size + 1);
 
@@ -472,20 +401,20 @@ string_t *str_alloc_va(int size, ...)
     return str;
 }
 
-void str_append(string_t *str, const char *value)
+void str_append(string_t *str, const char *data)
 {
     if (check_warnings(str, STR_NULL, __func__))
     {
         return;
     }
 
-    int size = (int)strlen(value);
+    int size = (int)strlen(data);
     str->size += size;
 
     mem_usage.allocated += (u_int32_t)size;
 
     str->data = realloc(str->data, sizeof(char) * (size_t)(str->size + 1));
-    memcpy(&str->data[str->size-size], value, size+1);
+    memcpy(&str->data[str->size-size], data, size+1);
 }
 
 void str_append_va(string_t *str, int size, ...)
@@ -617,24 +546,24 @@ void str_replace_count(string_t *str, const char *old, const char *new, int coun
     str->data = replacement;
 }
 
-void str_erase(string_t *str, const char *value)
+void str_erase(string_t *str, const char *data)
 {
     if (check_warnings(str, STR_NULL, __func__))
     {
         return;
     }
 
-    str_replace_count(str, value, "", 0);
+    str_replace_count(str, data, "", 0);
 }
 
-void str_erase_count(string_t *str, const char *value, int count)
+void str_erase_count(string_t *str, const char *data, int count)
 {
     if (check_warnings(str, STR_NULL, __func__))
     {
         return;
     }
 
-    str_replace_count(str, value, "", count);
+    str_replace_count(str, data, "", count);
 }
 
 void str_erase_index(string_t *str, int start, int end)
@@ -788,6 +717,26 @@ string_array_t *str_alloc_split_c_str(const char *curr, char *separator, int max
     return split_str(curr, (int)strlen(curr), separator, max_split);
 }
 
+bool sa_cmp_str(string_t *str, string_array_t *str_array, int index)
+{
+    if (check_index(&index, str_array->size, __func__))
+    {
+        return false;
+    }
+
+    return !(strcmp(str->data, (str_array->data_set[index]->data)));
+}
+
+bool sa_cmp_c_str(const char *char_str, string_array_t *str_array, int index)
+{
+    if (check_index(&index, str_array->size, __func__))
+    {
+        return false;
+    }
+
+    return !(strcmp(char_str, (str_array->data_set[index]->data)));
+}
+
 void str_upper(string_t *str)
 {
     if (check_warnings(str, STR_NULL, __func__))
@@ -864,6 +813,58 @@ void str_title(string_t *str)
     }
 }
 
+string_t *str_alloc_read_file(const char *path)
+{
+    if (*path == '\0')
+    {
+        return NULL;
+    }
+
+    string_t *str = NULL;
+
+    FILE *fp = fopen(path, "r");
+    read_content(fp, &str);
+    fclose(fp);
+
+    return str;
+}
+
+void str_write_file(string_t *str, const char *path, bool append_file)
+{
+    if (check_warnings(str, STR_NULL, __func__) || *path == '\0')
+    {
+        return;
+    }
+
+    const char *write_opt = append_file ? "a" : "w";
+    FILE *fp = fopen(path, write_opt);
+
+    if (fp == NULL) 
+    {
+        printf("%s: %swarning:%s failed to write content%s\n", __func__, PURPLE, WHITE, RESET);
+        return;
+    }
+
+    fprintf(fp, "%s", str->data);
+    fclose(fp);
+}
+
+string_t *str_alloc_sys_output(const char *cmd)
+{
+    if (*cmd == '\0')
+    {
+        return NULL;
+    }
+
+    string_t *str = NULL;
+
+    FILE *fp = popen(cmd, "r");
+    read_content(fp, &str);
+    fclose(fp);
+
+    return str;
+}
+
 int str_int(string_t *str)
 {
     if (check_warnings(str, STR_NULL, __func__))
@@ -884,6 +885,48 @@ double str_double(string_t *str)
     return atof(str->data);
 }
 
+char *c_str_alloc_copy(const char *c_str)
+{
+    mem_usage.allocated += sizeof(char) * (size_t)(strlen(c_str) + 1);
+    return strdup(c_str);
+}
+
+string_t *str_alloc_copy(string_t *str)
+{
+    return str_alloc(str->data);
+}
+
+void str_print(string_t *str, const char *beginning, const char *end)
+{
+    if (check_warnings(str, STR_NULL, __func__))
+    {
+        return;
+    }
+
+    printf("%s%s%s", beginning, str->data, end);
+}
+
+void str_array_print(string_array_t *str_array, const char *beginning, const char *end)
+{
+    if (str_array == NULL)
+    {
+        printf("%s: %swarning:%s string_array is NULL%s\n", __func__, PURPLE, WHITE, RESET);
+        return;
+    }
+
+    int i = 0;
+    int last_index = (str_array->size-1);
+
+    printf("%s{", beginning);
+
+    for (i = 0; i < last_index; i++)
+    {
+        printf("\"%s\", ", str_array->data_set[i]->data);
+    }
+
+    printf("\"%s\"}%s", str_array->data_set[i]->data, end);
+}
+
 void c_str_free(char **curr)
 {
     free_mem(*curr, sizeof(char) * (strlen(*curr)+1));
@@ -900,6 +943,11 @@ void str_free(string_t **str)
     str_data_free(*str);
     free_mem(*str, sizeof(string_t));
     *str = NULL;
+}
+
+void str_data_free(string_t *str)
+{
+    free_mem(str->data, sizeof(char) * (size_t)(str->size + 1));
 }
 
 void str_array_free(string_array_t **str_array)
