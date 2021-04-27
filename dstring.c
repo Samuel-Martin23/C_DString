@@ -9,11 +9,13 @@
 #define WHITE                       "\033[1;97m"
 #define RESET                       "\033[0m"
 
-#define MAX_CHARS                   1000000
+#define MAX_CHARS                   10000
+#define DEFAULT_CAPACITY            16
 
 typedef struct string
 {
     int size;
+    int capacity;
     char *data;
 } string_t;
 
@@ -275,6 +277,26 @@ static string_array_t *split_str(const char *curr, int size, char *separator, in
     return str_array;
 }
 
+static void update_capacity(string_t *str)
+{
+    while (str->size > str->capacity)
+    {
+        str->capacity *= 2;
+    }
+}
+
+static int calculate_capacity(int size)
+{
+    int capacity = DEFAULT_CAPACITY;
+
+    while (size > capacity)
+    {
+        capacity *= 2;
+    }
+
+    return capacity;
+}
+
 int str_get_size(string_t *str)
 {
     if (check_warnings(str, STR_NULL, __func__))
@@ -283,6 +305,16 @@ int str_get_size(string_t *str)
     }
 
     return str->size;
+}
+
+int str_get_capacity(string_t *str)
+{
+    if (check_warnings(str, STR_NULL, __func__))
+    {
+        return -1;
+    }
+
+    return str->capacity;
 }
 
 char *str_get_literal(string_t *str)
@@ -303,6 +335,16 @@ void str_set_size(string_t *str, int size)
     }
 
     str->size = size;
+}
+
+void str_set_capacity(string_t *str, int capacity)
+{
+    if (check_warnings(str, STR_NULL, __func__))
+    {
+        return;
+    }
+
+    str->capacity = capacity;
 }
 
 void str_set_literal(string_t *str, char *data)
@@ -369,12 +411,14 @@ void sa_set_index(string_array_t *str_array, int index, string_t *str)
 
 string_t *str_alloc(const char *data)
 {
-    string_t *str = NULL;
-    str = alloc_mem(sizeof(string_t));
+    string_t *str = alloc_mem(sizeof(string_t));
     str->size = (int)strlen(data);
-    str->data = strdup(data);
+    str->capacity = DEFAULT_CAPACITY;
 
-    mem_usage.allocated += sizeof(char) * (size_t)(str->size + 1);
+    update_capacity(str);
+
+    str->data = alloc_mem(sizeof(char) * (size_t)(str->capacity + 1));
+    memcpy(str->data, data, str->size+1);
 
     return str;
 }
@@ -408,12 +452,19 @@ void str_append(string_t *str, const char *data)
         return;
     }
 
+    int old_capacity = 0;
     int size = (int)strlen(data);
     str->size += size;
 
-    mem_usage.allocated += (u_int32_t)size;
+    if (str->size > str->capacity)
+    {
+        old_capacity = str->capacity;
 
-    str->data = realloc(str->data, sizeof(char) * (size_t)(str->size + 1));
+        update_capacity(str);
+        str->data = realloc(str->data, sizeof(char) * (size_t)(str->capacity + 1));
+        mem_usage.allocated += (u_int32_t)(sizeof(char) * (size_t)(str->capacity - old_capacity));
+    }
+
     memcpy(&str->data[str->size-size], data, size+1);
 }
 
@@ -467,6 +518,7 @@ string_t *str_alloc_substr(string_t *str, int *start_opt, int *end_opt, int *ste
     if (size == 0)
     {
         sub_str->size = 0;
+        sub_str->capacity = DEFAULT_CAPACITY;
         sub_str->data = alloc_mem(sizeof(char) * 1ul);
         sub_str->data[0] = '\0';
         return sub_str;
@@ -476,7 +528,11 @@ string_t *str_alloc_substr(string_t *str, int *start_opt, int *end_opt, int *ste
 
     size = abs_step >= size ? 1 : ceil_int(size, abs_step);
     sub_str->size = size;
-    sub_str->data = alloc_mem(sizeof(char) * (size_t)(sub_str->size+1));
+    sub_str->capacity = DEFAULT_CAPACITY;
+
+    update_capacity(sub_str);
+
+    sub_str->data = alloc_mem(sizeof(char) * (size_t)(sub_str->capacity + 1));
 
     for (int i = 0; i < sub_str->size; i++)
     {
@@ -520,8 +576,10 @@ void str_replace_count(string_t *str, const char *old, const char *new, int coun
     int new_size = (int)strlen(new);
     int total_size = ((str->size - (old_size  * num_of_occurrences)) + (new_size * num_of_occurrences));
 
+    int capacity = calculate_capacity(total_size);
+
     char *copy = str->data;
-    char *replacement = alloc_mem(sizeof(char) * (size_t)(total_size + 1));
+    char *replacement = alloc_mem(sizeof(char) * (size_t)(capacity + 1));
 
     while (*copy != '\0')
     {
@@ -543,6 +601,7 @@ void str_replace_count(string_t *str, const char *old, const char *new, int coun
     str_data_free(str);
 
     str->size = total_size;
+    str->capacity = capacity;
     str->data = replacement;
 }
 
@@ -576,7 +635,8 @@ void str_erase_index(string_t *str, int start, int end)
 
     int j = 0;
     int conjoin_size = str->size - (end - start);
-    char *conjoin = alloc_mem(sizeof(char) * (size_t)(conjoin_size + 1));
+    int capacity = calculate_capacity(conjoin_size);
+    char *conjoin = alloc_mem(sizeof(char) * (size_t)(capacity + 1));
 
     for (int i = 0; i < str->size; i++)
     {
@@ -593,6 +653,7 @@ void str_erase_index(string_t *str, int start, int end)
 
     str->data = conjoin;
     str->size = conjoin_size;
+    str->capacity = capacity;
 }
 
 int str_find(string_t *str, const char *search_val)
@@ -634,15 +695,18 @@ void str_lstrip(string_t *str, const char *characters)
         copy++;
     }
 
+    int capacity = calculate_capacity(striped_size);
+
     if (*copy != '\0')
     {
-        char *striped = alloc_mem(sizeof(char) * (size_t)(striped_size + 1));
+        char *striped = alloc_mem(sizeof(char) * (size_t)(capacity + 1));
         memcpy(striped, copy, striped_size+1);
 
         str_data_free(str);
 
         str->data = striped;
         str->size = striped_size;
+        str->capacity = capacity;
     }
 }
 
@@ -662,9 +726,11 @@ void str_rstrip(string_t *str, const char *characters)
         striped_size--;
     }
 
+    int capacity = calculate_capacity(striped_size);
+
     if (*forward != '\0')
     {
-        char *striped = alloc_mem(sizeof(char) * (size_t)(striped_size + 1));
+        char *striped = alloc_mem(sizeof(char) * (size_t)(capacity + 1));
         memcpy(striped, str->data, striped_size);
         striped[striped_size] = '\0';
 
@@ -672,6 +738,7 @@ void str_rstrip(string_t *str, const char *characters)
 
         str->data = striped;
         str->size = striped_size;
+        str->capacity = capacity;
     }
 }
 
@@ -947,7 +1014,7 @@ void str_free(string_t **str)
 
 void str_data_free(string_t *str)
 {
-    free_mem(str->data, sizeof(char) * (size_t)(str->size + 1));
+    free_mem(str->data, sizeof(char) * (size_t)(str->capacity + 1));
 }
 
 void str_array_free(string_array_t **str_array)

@@ -14,8 +14,10 @@ typedef struct string string_t;
 typedef struct string_array string_array_t;
 
 int str_get_size(string_t *str);
+int str_get_capacity(string_t *str);
 char *str_get_literal(string_t *str);
 void str_set_size(string_t *str, int size);
+void str_set_capacity(string_t *str, int capacity);
 void str_set_literal(string_t *str, char *data);
 
 int sa_get_size(string_array_t *str_array);
