@@ -204,7 +204,7 @@ static bool check_str_occurrences(const char *characters, char value)
     return false;
 }
 
-static int count_occurrences_in_str(const char *curr, const char *search_val, int count, int start, int end)
+static int count_occurrences_in_str(const char *data, const char *search_val, int count, int start, int end)
 {
     if (*search_val == '\0' || count < 0)
     {
@@ -213,12 +213,12 @@ static int count_occurrences_in_str(const char *curr, const char *search_val, in
 
     int occurrences = 0;
     int search_val_size = (int)strlen(search_val);
-    curr = strstr(curr + start, search_val);
+    data = strstr(data + start, search_val);
 
-    while (curr != NULL && occurrences < end)
+    while (data != NULL && occurrences < end)
     {
-        curr += search_val_size;
-        curr = strstr(curr, search_val);
+        data += search_val_size;
+        data = strstr(data, search_val);
         occurrences++;
     }
 
@@ -250,13 +250,13 @@ static void read_content(FILE *fp, string_t **str)
     }
 }
 
-static string_array_t *split_str(const char *curr, int size, char *separator, int max_split)
+static string_array_t *split_str(const char *data, int size, char *separator, int max_split)
 {
     int i = 0;
     char *split = NULL;
-    char *curr_alloc = strdup(curr);
-    char *copy_curr = curr_alloc;
-    int num_of_occurrences = count_occurrences_in_str(copy_curr, separator, max_split, 0, size);
+    char *data_alloc = strdup(data);
+    char *data_copy = data_alloc;
+    int num_of_occurrences = count_occurrences_in_str(data_copy, separator, max_split, 0, size);
 
     mem_usage.allocated += sizeof(char) * (size_t)(size + 1);
 
@@ -266,13 +266,13 @@ static string_array_t *split_str(const char *curr, int size, char *separator, in
 
     while (i < num_of_occurrences)
     {
-        split = strsep_m(&copy_curr, separator);
+        split = strsep_m(&data_copy, separator);
         str_array->data_set[i] = str_alloc(split);
         i++;
     }
 
-    str_array->data_set[i] = str_alloc(copy_curr);
-    free_mem(curr_alloc, sizeof(char) * (size_t)(size + 1));
+    str_array->data_set[i] = str_alloc(data_copy);
+    free_mem(data_alloc, sizeof(char) * (size_t)(size + 1));
 
     return str_array;
 }
@@ -774,14 +774,14 @@ string_array_t *str_alloc_split(string_t *str, char *separator, int max_split)
     return split_str(str->data, str->size, separator, max_split);
 }
 
-string_array_t *str_alloc_split_c_str(const char *curr, char *separator, int max_split)
+string_array_t *c_str_alloc_split(const char *data, char *separator, int max_split)
 {
-    if (curr == NULL)
+    if (data == NULL)
     {
         return NULL;
     }
 
-    return split_str(curr, (int)strlen(curr), separator, max_split);
+    return split_str(data, (int)strlen(data), separator, max_split);
 }
 
 bool sa_cmp_str(string_t *str, string_array_t *str_array, int index)
@@ -794,14 +794,14 @@ bool sa_cmp_str(string_t *str, string_array_t *str_array, int index)
     return !(strcmp(str->data, (str_array->data_set[index]->data)));
 }
 
-bool sa_cmp_c_str(const char *char_str, string_array_t *str_array, int index)
+bool sa_cmp_c_str(const char *data, string_array_t *str_array, int index)
 {
     if (check_index(&index, str_array->size, __func__))
     {
         return false;
     }
 
-    return !(strcmp(char_str, (str_array->data_set[index]->data)));
+    return !(strcmp(data, (str_array->data_set[index]->data)));
 }
 
 void str_upper(string_t *str)
@@ -952,10 +952,10 @@ double str_double(string_t *str)
     return atof(str->data);
 }
 
-char *c_str_alloc(const char *c_str)
+char *c_str_alloc(const char *data)
 {
-    mem_usage.allocated += sizeof(char) * (size_t)(strlen(c_str) + 1);
-    return strdup(c_str);
+    mem_usage.allocated += sizeof(char) * (size_t)(strlen(data) + 1);
+    return strdup(data);
 }
 
 string_t *str_alloc_copy(string_t *str)
@@ -994,10 +994,10 @@ void str_array_print(string_array_t *str_array, const char *beginning, const cha
     printf("\"%s\"}%s", str_array->data_set[i]->data, end);
 }
 
-void c_str_free(char **curr)
+void c_str_free(char **data)
 {
-    free_mem(*curr, sizeof(char) * (strlen(*curr)+1));
-    *curr = NULL;
+    free_mem(*data, sizeof(char) * (strlen(*data)+1));
+    *data = NULL;
 }
 
 void str_free(string_t **str)
