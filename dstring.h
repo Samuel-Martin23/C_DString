@@ -55,7 +55,7 @@ void str_write_file(string_t *str, const char *path, bool append_file);
 string_t *str_alloc_sys_output(const char *cmd);
 int str_int(string_t *str);
 double str_double(string_t *str);
-char *c_str_alloc_copy(const char *c_str);
+char *c_str_alloc(const char *c_str);
 string_t *str_alloc_copy(string_t *str);
 void str_print(string_t *str, const char *beginning, const char *end);
 void str_array_print(string_array_t *str_array, const char *beginning, const char *end);

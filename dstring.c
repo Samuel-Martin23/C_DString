@@ -519,7 +519,7 @@ string_t *str_alloc_substr(string_t *str, int *start_opt, int *end_opt, int *ste
     {
         sub_str->size = 0;
         sub_str->capacity = DEFAULT_CAPACITY;
-        sub_str->data = alloc_mem(sizeof(char) * 1ul);
+        sub_str->data = alloc_mem(sizeof(char) * (size_t)(sub_str->capacity + 1));
         sub_str->data[0] = '\0';
         return sub_str;
     }
@@ -952,7 +952,7 @@ double str_double(string_t *str)
     return atof(str->data);
 }
 
-char *c_str_alloc_copy(const char *c_str)
+char *c_str_alloc(const char *c_str)
 {
     mem_usage.allocated += sizeof(char) * (size_t)(strlen(c_str) + 1);
     return strdup(c_str);
@@ -981,7 +981,7 @@ void str_array_print(string_array_t *str_array, const char *beginning, const cha
         return;
     }
 
-    int i = 0;
+    int i;
     int last_index = (str_array->size-1);
 
     printf("%s{", beginning);
