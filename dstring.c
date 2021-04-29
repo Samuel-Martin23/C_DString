@@ -150,7 +150,7 @@ static int get_sub_size(int start, int end, bool is_step_neg)
 
 static bool check_ranges(int *start, int *end, int size, const char *function_name)
 {
-    if (*start >= size || *end >= size)
+    if (*start >= size || *end > size)
     {
         printf("%s: %swarning:%s indices are out of range%s\n", function_name, PURPLE, WHITE, RESET);
         return true;
@@ -211,14 +211,23 @@ static int count_occurrences_in_str(const char *data, const char *search_val, in
         return 0;
     }
 
+    int data_size = (int)strlen(data);
+    char *data_alloc = strdup(data);
+    char *data_copy = data_alloc;
+
+    mem_usage.allocated += sizeof(char) * (size_t)(data_size + 1);
+
+    data_copy = &data_copy[start];
+    data_copy[end-start] = '\0';
+
     int occurrences = 0;
     int search_val_size = (int)strlen(search_val);
-    data = strstr(data + start, search_val);
+    data_copy = strstr(data_copy, search_val);
 
-    while (data != NULL && occurrences < end)
+    while (data_copy != NULL && occurrences < end)
     {
-        data += search_val_size;
-        data = strstr(data, search_val);
+        data_copy += search_val_size;
+        data_copy = strstr(data_copy, search_val);
         occurrences++;
     }
 
@@ -226,6 +235,8 @@ static int count_occurrences_in_str(const char *data, const char *search_val, in
     {
         occurrences = count;
     }
+
+    free_mem(data_alloc, sizeof(char) * (size_t)(data_size + 1));
 
     return occurrences;
 }
@@ -633,26 +644,18 @@ void str_erase_index(string_t *str, int start, int end)
         return;
     }
 
-    int j = 0;
-    int conjoin_size = str->size - (end - start);
-    int capacity = calculate_capacity(conjoin_size);
-    char *conjoin = alloc_mem(sizeof(char) * (size_t)(capacity + 1));
+    int conjoin_data_size = str->size - (end - start);
+    int capacity = calculate_capacity(conjoin_data_size);
+    char *conjoin_data = alloc_mem(sizeof(char) * (size_t)(capacity + 1));
 
-    for (int i = 0; i < str->size; i++)
-    {
-        if (!(i >= start && i < end))
-        {
-            conjoin[j] = str->data[i];
-            j++;
-        }
-    }
-
-    conjoin[conjoin_size] = '\0';
+    memcpy(conjoin_data, str->data, start);
+    memcpy(&conjoin_data[start], &str->data[end], (conjoin_data_size - start));
+    conjoin_data[conjoin_data_size] = '\0';
 
     str_data_free(str);
 
-    str->data = conjoin;
-    str->size = conjoin_size;
+    str->data = conjoin_data;
+    str->size = conjoin_data_size;
     str->capacity = capacity;
 }
 
