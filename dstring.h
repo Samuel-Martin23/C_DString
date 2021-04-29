@@ -50,6 +50,7 @@ void str_lower(string_t *str);
 void str_swapcase(string_t *str);
 void str_capitalize(string_t *str);
 void str_title(string_t *str);
+string_t *str_alloc_read_keyboard(const char *output_message);
 string_t *str_alloc_read_file(const char *path);
 void str_write_file(string_t *str, const char *path, bool append_file);
 string_t *str_alloc_sys_output(const char *cmd);

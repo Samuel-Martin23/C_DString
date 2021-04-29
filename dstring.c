@@ -308,6 +308,20 @@ static int calculate_capacity(int size)
     return capacity;
 }
 
+static string_t *str_alloc_with_size(const char *data, int size)
+{
+    string_t *str = alloc_mem(sizeof(string_t));
+    str->size = size;
+    str->capacity = DEFAULT_CAPACITY;
+
+    update_capacity(str);
+
+    str->data = alloc_mem(sizeof(char) * (size_t)(str->capacity + 1));
+    memcpy(str->data, data, str->size+1);
+
+    return str;
+}
+
 int str_get_size(string_t *str)
 {
     if (check_warnings(str, STR_NULL, __func__))
@@ -881,6 +895,18 @@ void str_title(string_t *str)
             str->data[i] = (char)toupper(str->data[i]);
         }
     }
+}
+
+string_t *str_alloc_read_keyboard(const char *output_message)
+{
+    printf("%s", output_message);
+
+    char input[MAX_CHARS];
+    fgets(input, MAX_CHARS, stdin);
+    int size = (int)(strlen(input) - 1);
+    input[size] = '\0';
+
+    return str_alloc_with_size(input, size);
 }
 
 string_t *str_alloc_read_file(const char *path)
