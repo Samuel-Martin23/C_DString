@@ -308,7 +308,7 @@ static int calculate_capacity(int size)
     return capacity;
 }
 
-static string_t *str_alloc_with_size(const char *data, int size)
+static string_t *str_alloc_with_size(int size, const char *data)
 {
     string_t *str = alloc_mem(sizeof(string_t));
     str->size = size;
@@ -906,7 +906,7 @@ string_t *str_alloc_read_keyboard(const char *output_message)
     int size = (int)(strlen(input) - 1);
     input[size] = '\0';
 
-    return str_alloc_with_size(input, size);
+    return str_alloc_with_size(size, input);
 }
 
 string_t *str_alloc_read_file(const char *path)
@@ -983,7 +983,7 @@ double str_double(string_t *str)
 
 char *c_str_alloc(const char *data)
 {
-    mem_usage.allocated += sizeof(char) * (size_t)(strlen(data) + 1);
+    mem_usage.allocated += sizeof(char) * (strlen(data) + 1);
     return strdup(data);
 }
 
