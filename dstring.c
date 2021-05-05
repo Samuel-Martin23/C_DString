@@ -511,6 +511,73 @@ void str_append_va(string_t *str, int size, ...)
     va_end(args);
 }
 
+string_t *str_add(string_t *curr_str, string_t *newest_str)
+{
+    return str_add_va(2, curr_str, newest_str);
+}
+
+string_t *str_add_va(int size, ...)
+{
+    if (size < 1)
+    {
+        return NULL;
+    }
+
+    va_list args;
+    va_start(args, size);
+
+    string_t *temp = NULL;
+    string_t *total_str = str_alloc_copy(va_arg(args, string_t*));
+
+    for (int i = 1; i < size; i++)
+    {
+        temp = va_arg(args, string_t*);
+
+        if (temp == NULL)
+        {
+            return NULL;
+        }
+
+        str_append(total_str, temp->data);
+    }
+
+    va_end(args);
+
+    return total_str;
+}
+
+void str_add_equals(string_t *curr_str, string_t *newest_str)
+{
+    str_add_equals_va(curr_str, 1, newest_str);
+}
+
+void str_add_equals_va(string_t *str, int size, ...)
+{
+    if (check_warnings(str, STR_NULL, __func__) || size < 1)
+    {
+        return;
+    }
+
+    va_list args;
+    va_start(args, size);
+
+    string_t *temp = NULL;
+
+    for (int i = 0; i < size; i++)
+    {
+        temp = va_arg(args, string_t*);
+
+        if (temp == NULL)
+        {
+            return;
+        }
+
+        str_append(str, temp->data);
+    }
+
+    va_end(args);
+}
+
 string_t *str_alloc_substr(string_t *str, int *start_opt, int *end_opt, int *step_opt)
 {
     if (check_warnings(str, STR_NULL, __func__))
