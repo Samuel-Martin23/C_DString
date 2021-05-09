@@ -58,6 +58,8 @@ string_t *str_alloc_read_keyboard(const char *output_message);
 string_t *str_alloc_read_file(const char *path);
 void str_write_file(string_t *str, const char *path, bool append_file);
 string_t *str_alloc_sys_output(const char *cmd);
+int str_ascii_total(string_t *str);
+int c_str_ascii_total(const char *data);
 int str_int(string_t *str);
 double str_double(string_t *str);
 char *c_str_alloc(const char *data);
