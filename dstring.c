@@ -241,24 +241,26 @@ static int count_occurrences_in_str(const char *data, const char *search_val, in
     return occurrences;
 }
 
-static void read_content(FILE *fp, string_t **str)
+static string_t *read_content(FILE *fp)
 {
-    *str = str_alloc("");
-    char source_file[MAX_CHARS];
+    char file_line[MAX_CHARS];
+    string_t *str = str_alloc("");
 
     if (fp == NULL) 
     {
         printf("%s: %swarning:%s failed to read content%s\n", __func__, PURPLE, WHITE, RESET);
-        return;
+        return NULL;
     }
 
     while (!feof(fp))
     {
-        if (fgets(source_file, MAX_CHARS, fp) != NULL)
+        if (fgets(file_line, MAX_CHARS, fp) != NULL)
         {
-            str_append(*str, source_file);
+            str_append(str, file_line);
         }
     }
+
+    return str;
 }
 
 static string_array_t *split_str(const char *data, int size, char *separator, int max_split)
@@ -306,6 +308,58 @@ static void set_empty_str(string_t *str)
     str->capacity = DEFAULT_CAPACITY;
     str->data = alloc_mem(sizeof(char) * (size_t)(str->capacity + 1));
     str->data[0] = '\0';
+}
+
+static char *get_str_bit(int bit)
+{
+    return bit ? "1" : "0";
+}
+
+static char *get_str_number(int number)
+{
+    switch (number)
+    {
+        case 0:
+            return "0";
+        case 1:
+            return "1";
+        case 2:
+            return "2";
+        case 3:
+            return "3";
+        case 4:
+            return "4";
+        case 5:
+            return "5";
+        case 6:
+            return "6";
+        case 7:
+            return "7";
+        case 8:
+            return "8";
+        case 9:
+            return "9";
+    }
+
+    return "";
+}
+
+static int update_capacity(string_t *str, const char *data)
+{
+    int old_capacity = 0;
+    int data_size = (int)strlen(data);
+    str->size += data_size;
+
+    if (str->size > str->capacity)
+    {
+        old_capacity = str->capacity;
+        str->capacity = calculate_capacity(str->size);
+        str->data = realloc(str->data, sizeof(char) * (size_t)(str->capacity + 1));
+
+        mem_usage.allocated += (u_int32_t)(sizeof(char) * (size_t)(str->capacity - old_capacity));
+    }
+
+    return data_size;
 }
 
 int str_get_size(string_t *str)
@@ -462,18 +516,7 @@ void str_append(string_t *str, const char *data)
         return;
     }
 
-    int old_capacity = 0;
-    int data_size = (int)strlen(data);
-    str->size += data_size;
-
-    if (str->size > str->capacity)
-    {
-        old_capacity = str->capacity;
-        str->capacity = calculate_capacity(str->size);
-        str->data = realloc(str->data, sizeof(char) * (size_t)(str->capacity + 1));
-
-        mem_usage.allocated += (u_int32_t)(sizeof(char) * (size_t)(str->capacity - old_capacity));
-    }
+    int data_size = update_capacity(str, data);
 
     memcpy(&str->data[str->size - data_size], data, data_size + 1);
 }
@@ -563,6 +606,19 @@ void str_add_equals_va(string_t *str, int size, ...)
     }
 
     va_end(args);
+}
+
+void str_before(string_t *str, const char *data)
+{
+    if (check_warnings(str, STR_NULL, __func__))
+    {
+        return;
+    }
+
+    int data_size = update_capacity(str, data);
+
+    memcpy(&str->data[data_size], str->data, str->size+1);
+    memcpy(str->data, data, data_size);
 }
 
 string_t *str_alloc_substr(string_t *str, int *start_opt, int *end_opt, int *step_opt)
@@ -978,10 +1034,8 @@ string_t *str_alloc_read_file(const char *path)
         return NULL;
     }
 
-    string_t *str = NULL;
-
     FILE *fp = fopen(path, "r");
-    read_content(fp, &str);
+    string_t *str = read_content(fp);
     fclose(fp);
 
     return str;
@@ -1014,10 +1068,8 @@ string_t *str_alloc_sys_output(const char *cmd)
         return NULL;
     }
 
-    string_t *str = NULL;
-
     FILE *fp = popen(cmd, "r");
-    read_content(fp, &str);
+    string_t *str = read_content(fp);
     fclose(fp);
 
     return str;
@@ -1059,6 +1111,57 @@ double str_double(string_t *str)
     }
 
     return atof(str->data);
+}
+
+string_t *str_alloc_int_binary(int number, int bits_shown)
+{
+    string_t *bi_num = str_alloc("");
+
+    while (number > 0)
+    {
+        str_before(bi_num, get_str_bit(number % 2));
+        number /= 2;
+    }
+
+    if (bits_shown > bi_num->size)
+    {
+        bits_shown -= bi_num->size;
+
+        for (int i = 0; i < bits_shown; i++)
+        {
+            str_before(bi_num, "0");
+        }
+    }
+
+    return bi_num;
+}
+
+string_t *str_alloc_cstr_binary(const char *number, int bits_shown)
+{
+    return str_alloc_int_binary(atoi(number), bits_shown);
+}
+
+string_t *str_alloc_binary(string_t *str, int bits_shown)
+{
+    if (check_warnings(str, STR_NULL, __func__))
+    {
+        return NULL;
+    }
+
+    return str_alloc_int_binary(str_int(str), bits_shown);
+}
+
+string_t *str_alloc_int_decimal(int number)
+{
+    string_t *digits = str_alloc("");
+
+    while (number > 0)
+    {
+        str_before(digits, get_str_number((number % 10)));
+        number /= 10;
+    }
+
+    return digits;
 }
 
 char *c_str_alloc(const char *data)
