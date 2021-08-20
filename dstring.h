@@ -10,6 +10,8 @@
 #include <stdarg.h>
 #include "../C_Allocation_Metrics/allocation_metrics.h"
 
+#define STR_MAX_CHARS           1000000
+
 typedef struct string string_t;
 typedef struct string_array string_array_t;
 
@@ -61,9 +63,9 @@ void str_write_file(string_t *str, const char *path, bool append_file);
 string_t *str_alloc_sys_output(const char *cmd);
 int64_t str_ascii_total(string_t *str);
 int64_t c_str_ascii_total(const char *data);
-int64_t str_int(string_t *str);
+int64_t str_ll(string_t *str);
 double str_double(string_t *str);
-string_t *str_alloc_int_binary(int64_t number, int64_t bits_shown);
+string_t *str_alloc_ll_binary(int64_t number, int64_t bits_shown);
 string_t *str_alloc_cstr_binary(const char *number, int64_t bits_shown);
 string_t *str_alloc_binary(string_t *str, int64_t bits_shown);
 string_t *str_alloc_int_decimal(int64_t number);

@@ -9,7 +9,6 @@
 #define WHITE                       "\033[1;97m"
 #define RESET                       "\033[0m"
 
-#define MAX_CHARS                   10000
 #define DEFAULT_CAPACITY            16
 
 typedef struct string
@@ -243,7 +242,7 @@ static int64_t count_occurrences_in_str(const char *data, const char *search_val
 
 static string_t *read_content(FILE *fp)
 {
-    char file_line[MAX_CHARS * MAX_CHARS];
+    char file_line[STR_MAX_CHARS];
     string_t *str = str_alloc("");
 
     if (fp == NULL) 
@@ -254,7 +253,7 @@ static string_t *read_content(FILE *fp)
 
     while (!feof(fp))
     {
-        if (fgets(file_line, MAX_CHARS, fp) != NULL)
+        if (fgets(file_line, STR_MAX_CHARS, fp) != NULL)
         {
             str_append(str, file_line);
         }
@@ -1006,10 +1005,10 @@ string_t *str_alloc_read_keyboard(const char *output_message)
     printf("%s", output_message);
 
     int64_t input_size = 0;
-    char input[MAX_CHARS];
+    char input[STR_MAX_CHARS];
     string_t *str = alloc_mem(sizeof(string_t));
 
-    fgets(input, MAX_CHARS, stdin);
+    fgets(input, STR_MAX_CHARS, stdin);
     input_size = (int64_t)(strlen(input) - 1);
     input[input_size] = '\0';
 
@@ -1088,14 +1087,14 @@ int64_t c_str_ascii_total(const char *data)
     return ascii_total;
 }
 
-int64_t str_int(string_t *str)
+int64_t str_ll(string_t *str)
 {
     if (check_warnings(str, STR_NULL, __func__))
     {
         return -1;
     }
 
-    return atoi(str->data);
+    return atoll(str->data);
 }
 
 double str_double(string_t *str)
@@ -1108,7 +1107,7 @@ double str_double(string_t *str)
     return atof(str->data);
 }
 
-string_t *str_alloc_int_binary(int64_t number, int64_t bits_shown)
+string_t *str_alloc_ll_binary(int64_t number, int64_t bits_shown)
 {
     string_t *bi_num = str_alloc("");
 
@@ -1133,7 +1132,7 @@ string_t *str_alloc_int_binary(int64_t number, int64_t bits_shown)
 
 string_t *str_alloc_cstr_binary(const char *number, int64_t bits_shown)
 {
-    return str_alloc_int_binary(atoi(number), bits_shown);
+    return str_alloc_ll_binary(atoll(number), bits_shown);
 }
 
 string_t *str_alloc_binary(string_t *str, int64_t bits_shown)
@@ -1143,7 +1142,7 @@ string_t *str_alloc_binary(string_t *str, int64_t bits_shown)
         return NULL;
     }
 
-    return str_alloc_int_binary(str_int(str), bits_shown);
+    return str_alloc_ll_binary(str_ll(str), bits_shown);
 }
 
 string_t *str_alloc_int_decimal(int64_t number)
