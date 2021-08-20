@@ -14,14 +14,14 @@
 
 typedef struct string
 {
-    int size;
-    int capacity;
+    int64_t size;
+    int64_t capacity;
     char *data;
 } string_t;
 
 typedef struct string_array
 {
-    int size;
+    int64_t size;
     string_t **data_set;
 } string_array_t;
 
@@ -77,7 +77,7 @@ static char *strsep_m(char **data, char *separator)
     return temp;
 }
 
-static bool check_index(int *index, int size, const char *function_name)
+static bool check_index(int64_t *index, int64_t size, const char *function_name)
 {
     if (*index < 0)
     {
@@ -93,14 +93,14 @@ static bool check_index(int *index, int size, const char *function_name)
     return false;
 }
 
-static int get_start_index(int *start_opt, int size, bool is_step_neg)
+static int64_t get_start_index(int64_t *start_opt, int64_t size, bool is_step_neg)
 {
     if (start_opt == NULL)
     {
         return is_step_neg ? (size - 1) : 0;
     }
 
-    int start = *start_opt;
+    int64_t start = *start_opt;
 
     if (start < 0)
     {
@@ -110,14 +110,14 @@ static int get_start_index(int *start_opt, int size, bool is_step_neg)
     return start;
 }
 
-static int get_end_index(int *end_opt, int size, bool is_step_neg)
+static int64_t get_end_index(int64_t *end_opt, int64_t size, bool is_step_neg)
 {
     if (end_opt == NULL)
     {
         return is_step_neg ? -1 : size;
     }
 
-    int end = *end_opt;
+    int64_t end = *end_opt;
 
     if (end < 0)
     {
@@ -131,14 +131,14 @@ static int get_end_index(int *end_opt, int size, bool is_step_neg)
     return end;
 }
 
-static int get_sub_size(int start, int end, bool is_step_neg)
+static int64_t get_sub_size(int64_t start, int64_t end, bool is_step_neg)
 {
     if (start < 0)
     {
         return 0;
     }
 
-    int sub_str_size = is_step_neg ? (start - end) : (end - start);
+    int64_t sub_str_size = is_step_neg ? (start - end) : (end - start);
 
     if (sub_str_size <= 0)
     {
@@ -148,7 +148,7 @@ static int get_sub_size(int start, int end, bool is_step_neg)
     return sub_str_size;
 }
 
-static bool check_ranges(int *start, int *end, int size, const char *function_name)
+static bool check_ranges(int64_t *start, int64_t *end, int64_t size, const char *function_name)
 {
     if (*start >= size || *end > size)
     {
@@ -179,9 +179,9 @@ static bool check_ranges(int *start, int *end, int size, const char *function_na
     return false;
 }
 
-static int ceil_int(int x, int y) 
+static int64_t ceil_ll(int64_t x, int64_t y) 
 {
-    return (int)ceil(x / (double)y);
+    return (int64_t)ceil(x / (double)y);
 }
 
 static bool check_str_occurrences(const char *characters, char value)
@@ -204,14 +204,14 @@ static bool check_str_occurrences(const char *characters, char value)
     return false;
 }
 
-static int count_occurrences_in_str(const char *data, const char *search_val, int count, int start, int end)
+static int64_t count_occurrences_in_str(const char *data, const char *search_val, int64_t count, int64_t start, int64_t end)
 {
     if (*search_val == '\0' || count < 0)
     {
         return 0;
     }
 
-    int data_size = (int)strlen(data);
+    int64_t data_size = (int64_t)strlen(data);
     char *data_alloc = strdup(data);
     char *data_copy = data_alloc;
 
@@ -220,8 +220,8 @@ static int count_occurrences_in_str(const char *data, const char *search_val, in
     data_copy = &data_copy[start];
     data_copy[end-start] = '\0';
 
-    int occurrences = 0;
-    int search_val_size = (int)strlen(search_val);
+    int64_t occurrences = 0;
+    int64_t search_val_size = (int64_t)strlen(search_val);
     data_copy = strstr(data_copy, search_val);
 
     while (data_copy != NULL && occurrences < end)
@@ -243,7 +243,7 @@ static int count_occurrences_in_str(const char *data, const char *search_val, in
 
 static string_t *read_content(FILE *fp)
 {
-    char file_line[MAX_CHARS];
+    char file_line[MAX_CHARS * MAX_CHARS];
     string_t *str = str_alloc("");
 
     if (fp == NULL) 
@@ -263,13 +263,13 @@ static string_t *read_content(FILE *fp)
     return str;
 }
 
-static string_array_t *split_str(const char *data, int size, char *separator, int max_split)
+static string_array_t *split_str(const char *data, int64_t size, char *separator, int64_t max_split)
 {
-    int i = 0;
+    int64_t i = 0;
     char *split = NULL;
     char *data_alloc = strdup(data);
     char *data_copy = data_alloc;
-    int num_of_occurrences = count_occurrences_in_str(data_copy, separator, max_split, 0, size);
+    int64_t num_of_occurrences = count_occurrences_in_str(data_copy, separator, max_split, 0, size);
 
     mem_usage.allocated += sizeof(char) * (size_t)(size + 1);
 
@@ -290,9 +290,9 @@ static string_array_t *split_str(const char *data, int size, char *separator, in
     return str_array;
 }
 
-static int calculate_capacity(int size)
+static int64_t calculate_capacity(int64_t size)
 {
-    int capacity = DEFAULT_CAPACITY;
+    int64_t capacity = DEFAULT_CAPACITY;
 
     while (size > capacity)
     {
@@ -310,12 +310,7 @@ static void set_empty_str(string_t *str)
     str->data[0] = '\0';
 }
 
-static char *get_str_bit(int bit)
-{
-    return bit ? "1" : "0";
-}
-
-static char *get_str_number(int number)
+static char *get_str_number(int8_t number)
 {
     switch (number)
     {
@@ -344,10 +339,10 @@ static char *get_str_number(int number)
     return "";
 }
 
-static int update_capacity(string_t *str, const char *data)
+static int64_t update_capacity(string_t *str, const char *data)
 {
-    int old_capacity = 0;
-    int data_size = (int)strlen(data);
+    int64_t old_capacity = 0;
+    int64_t data_size = (int64_t)strlen(data);
     str->size += data_size;
 
     if (str->size > str->capacity)
@@ -362,21 +357,21 @@ static int update_capacity(string_t *str, const char *data)
     return data_size;
 }
 
-int str_get_size(string_t *str)
+int64_t str_get_size(string_t *str)
 {
     if (check_warnings(str, STR_NULL, __func__))
     {
-        return -1;
+        return 0;
     }
 
     return str->size;
 }
 
-int str_get_capacity(string_t *str)
+int64_t str_get_capacity(string_t *str)
 {
     if (check_warnings(str, STR_NULL, __func__))
     {
-        return -1;
+        return 0;
     }
 
     return str->capacity;
@@ -392,7 +387,7 @@ char *str_get_literal(string_t *str)
     return str->data;
 }
 
-void str_set_size(string_t *str, int size)
+void str_set_size(string_t *str, int64_t size)
 {
     if (check_warnings(str, STR_NULL, __func__))
     {
@@ -402,7 +397,7 @@ void str_set_size(string_t *str, int size)
     str->size = size;
 }
 
-void str_set_capacity(string_t *str, int capacity)
+void str_set_capacity(string_t *str, int64_t capacity)
 {
     if (check_warnings(str, STR_NULL, __func__))
     {
@@ -422,7 +417,7 @@ void str_set_literal(string_t *str, char *data)
     str->data = data;
 }
 
-int sa_get_size(string_array_t *str_array)
+int64_t sa_get_size(string_array_t *str_array)
 {
     if (str_array == NULL)
     {
@@ -433,7 +428,7 @@ int sa_get_size(string_array_t *str_array)
     return str_array->size;
 }
 
-string_t *sa_get_index(string_array_t *str_array, int index)
+string_t *sa_get_index(string_array_t *str_array, int64_t index)
 {
     if (check_index(&index, str_array->size, __func__))
     {
@@ -448,7 +443,7 @@ string_t *sa_get_index(string_array_t *str_array, int index)
     return str_array->data_set[index];
 }
 
-void sa_set_size(string_array_t *str_array, int size)
+void sa_set_size(string_array_t *str_array, int64_t size)
 {
     if (str_array == NULL)
     {
@@ -459,7 +454,7 @@ void sa_set_size(string_array_t *str_array, int size)
     str_array->size = size;
 }
 
-void sa_set_index(string_array_t *str_array, int index, string_t *str)
+void sa_set_index(string_array_t *str_array, int64_t index, string_t *str)
 {
     if (check_index(&index, str_array->size, __func__))
     {
@@ -487,7 +482,7 @@ string_t *str_alloc(const char *data)
     return str;
 }
 
-string_t *str_alloc_va(int size, ...)
+string_t *str_alloc_va(int64_t size, ...)
 {
     if (size < 1)
     {
@@ -499,7 +494,7 @@ string_t *str_alloc_va(int size, ...)
 
     string_t *str = str_alloc(va_arg(args, char*));
 
-    for (int i = 1; i < size; i++)
+    for (int64_t i = 1; i < size; i++)
     {
         str_append(str, va_arg(args, char*));
     }
@@ -516,12 +511,12 @@ void str_append(string_t *str, const char *data)
         return;
     }
 
-    int data_size = update_capacity(str, data);
+    int64_t data_size = update_capacity(str, data);
 
     memcpy(&str->data[str->size - data_size], data, data_size + 1);
 }
 
-void str_append_va(string_t *str, int size, ...)
+void str_append_va(string_t *str, int64_t size, ...)
 {
     if (check_warnings(str, STR_NULL, __func__) || size < 1)
     {
@@ -531,7 +526,7 @@ void str_append_va(string_t *str, int size, ...)
     va_list args;
     va_start(args, size);
 
-    for (int i = 0; i < size; i++)
+    for (int64_t i = 0; i < size; i++)
     {
         str_append(str, va_arg(args, char*));
     }
@@ -544,7 +539,7 @@ string_t *str_add(string_t *curr_str, string_t *newest_str)
     return str_add_va(2, curr_str, newest_str);
 }
 
-string_t *str_add_va(int size, ...)
+string_t *str_add_va(int64_t size, ...)
 {
     if (size < 1)
     {
@@ -557,14 +552,14 @@ string_t *str_add_va(int size, ...)
     string_t *temp = NULL;
     string_t *total_str = str_alloc_copy(va_arg(args, string_t*));
 
-    for (int i = 1; i < size; i++)
+    for (int64_t i = 1; i < size; i++)
     {
         temp = va_arg(args, string_t*);
 
         if (temp == NULL)
         {
             va_end(args);
-            return NULL;
+            return total_str;
         }
 
         str_append(total_str, temp->data);
@@ -580,7 +575,7 @@ void str_add_equals(string_t *curr_str, string_t *newest_str)
     str_add_equals_va(curr_str, 1, newest_str);
 }
 
-void str_add_equals_va(string_t *str, int size, ...)
+void str_add_equals_va(string_t *str, int64_t size, ...)
 {
     if (check_warnings(str, STR_NULL, __func__) || size < 1)
     {
@@ -592,7 +587,7 @@ void str_add_equals_va(string_t *str, int size, ...)
 
     string_t *temp = NULL;
 
-    for (int i = 0; i < size; i++)
+    for (int64_t i = 0; i < size; i++)
     {
         temp = va_arg(args, string_t*);
 
@@ -615,20 +610,20 @@ void str_before(string_t *str, const char *data)
         return;
     }
 
-    int data_size = update_capacity(str, data);
+    int64_t data_size = update_capacity(str, data);
 
     memcpy(&str->data[data_size], str->data, str->size+1);
     memcpy(str->data, data, data_size);
 }
 
-string_t *str_alloc_substr(string_t *str, int *start_opt, int *end_opt, int *step_opt)
+string_t *str_alloc_substr(string_t *str, int64_t *start_opt, int64_t *end_opt, int64_t *step_opt)
 {
     if (check_warnings(str, STR_NULL, __func__))
     {
         return NULL;
     }
 
-    int step = 0;
+    int64_t step = 0;
 
     if (step_opt == NULL)
     {
@@ -645,9 +640,9 @@ string_t *str_alloc_substr(string_t *str, int *start_opt, int *end_opt, int *ste
     }
 
     bool is_step_neg = (step < 0);
-    int start = get_start_index(start_opt, str->size, is_step_neg);
-    int end = get_end_index(end_opt, str->size, is_step_neg);
-    int size = get_sub_size(start, end, is_step_neg);
+    int64_t start = get_start_index(start_opt, str->size, is_step_neg);
+    int64_t end = get_end_index(end_opt, str->size, is_step_neg);
+    int64_t size = get_sub_size(start, end, is_step_neg);
     string_t *sub_str = alloc_mem(sizeof(string_t));
 
     if (size == 0)
@@ -656,13 +651,13 @@ string_t *str_alloc_substr(string_t *str, int *start_opt, int *end_opt, int *ste
         return sub_str;
     }
 
-    int abs_step = abs(step);
+    int64_t abs_step = llabs(step);
 
-    sub_str->size = (abs_step >= size) ? 1 : ceil_int(size, abs_step);
+    sub_str->size = (abs_step >= size) ? 1 : ceil_ll(size, abs_step);
     sub_str->capacity = calculate_capacity(sub_str->size);
     sub_str->data = alloc_mem(sizeof(char) * (size_t)(sub_str->capacity + 1));
 
-    for (int i = 0; i < sub_str->size; i++)
+    for (int64_t i = 0; i < sub_str->size; i++)
     {
         sub_str->data[i] = str->data[start];
         start += step;
@@ -683,14 +678,14 @@ void str_replace(string_t *str, const char *old, const char *new)
     str_replace_count(str, old, new, 0);
 }
 
-void str_replace_count(string_t *str, const char *old, const char *new, int count)
+void str_replace_count(string_t *str, const char *old, const char *new, int64_t count)
 {
     if (check_warnings(str, STR_NULL, __func__))
     {
         return;
     }
 
-    int num_of_occurrences = count_occurrences_in_str(str->data, old, count, 0, str->size);
+    int64_t num_of_occurrences = count_occurrences_in_str(str->data, old, count, 0, str->size);
 
     if (num_of_occurrences == 0)
     {
@@ -698,13 +693,13 @@ void str_replace_count(string_t *str, const char *old, const char *new, int coun
         return;
     }
 
-    int i = 0;
-    int num_of_replacements = 0;
-    int old_size = (int)strlen(old);
-    int new_size = (int)strlen(new);
-    int total_size = ((str->size - (old_size  * num_of_occurrences)) + (new_size * num_of_occurrences));
+    int64_t i = 0;
+    int64_t num_of_replacements = 0;
+    int64_t old_size = (int64_t)strlen(old);
+    int64_t new_size = (int64_t)strlen(new);
+    int64_t total_size = ((str->size - (old_size  * num_of_occurrences)) + (new_size * num_of_occurrences));
 
-    int capacity = calculate_capacity(total_size);
+    int64_t capacity = calculate_capacity(total_size);
 
     char *copy = str->data;
     char *replacement = alloc_mem(sizeof(char) * (size_t)(capacity + 1));
@@ -743,7 +738,7 @@ void str_erase(string_t *str, const char *data)
     str_replace_count(str, data, "", 0);
 }
 
-void str_erase_count(string_t *str, const char *data, int count)
+void str_erase_count(string_t *str, const char *data, int64_t count)
 {
     if (check_warnings(str, STR_NULL, __func__))
     {
@@ -753,7 +748,7 @@ void str_erase_count(string_t *str, const char *data, int count)
     str_replace_count(str, data, "", count);
 }
 
-void str_erase_index(string_t *str, int start, int end)
+void str_erase_index(string_t *str, int64_t start, int64_t end)
 {
     if (check_warnings(str, STR_NULL, __func__)
         || check_ranges(&start, &end, str->size, __func__))
@@ -761,8 +756,8 @@ void str_erase_index(string_t *str, int start, int end)
         return;
     }
 
-    int conjoin_data_size = str->size - (end - start);
-    int capacity = calculate_capacity(conjoin_data_size);
+    int64_t conjoin_data_size = str->size - (end - start);
+    int64_t capacity = calculate_capacity(conjoin_data_size);
     char *conjoin_data = alloc_mem(sizeof(char) * (size_t)(capacity + 1));
 
     memcpy(conjoin_data, str->data, start);
@@ -776,7 +771,7 @@ void str_erase_index(string_t *str, int start, int end)
     str->capacity = capacity;
 }
 
-int str_find(string_t *str, const char *search_val)
+int64_t str_find(string_t *str, const char *search_val)
 {
     if (check_warnings(str, STR_NULL, __func__))
     {
@@ -785,10 +780,10 @@ int str_find(string_t *str, const char *search_val)
 
     char *found = strstr(str->data, search_val);
 
-    return found ? (int)(found - str->data) : -1;
+    return found ? (int64_t)(found - str->data) : -1;
 }
 
-int str_count(string_t *str, const char *search_val, int start, int end)
+int64_t str_count(string_t *str, const char *search_val, int64_t start, int64_t end)
 {
     if (check_warnings(str, STR_NULL, __func__) || *search_val == '\0' 
         || check_ranges(&start, &end, str->size, __func__))
@@ -815,8 +810,8 @@ void str_lstrip(string_t *str, const char *characters)
 
     if (*copy != '\0')
     {
-        int striped_size = str->size - (int)(copy - str->data);
-        int capacity = calculate_capacity(striped_size);
+        int64_t striped_size = str->size - (copy - str->data);
+        int64_t capacity = calculate_capacity(striped_size);
         char *striped = alloc_mem(sizeof(char) * (size_t)(capacity + 1));
 
         memcpy(striped, copy, striped_size + 1);
@@ -849,8 +844,8 @@ void str_rstrip(string_t *str, const char *characters)
 
     if (*forward != '\0')
     {
-        int striped_size = (int)(forward - str->data);
-        int capacity = calculate_capacity(striped_size);
+        int64_t striped_size = forward - str->data;
+        int64_t capacity = calculate_capacity(striped_size);
         char *striped = alloc_mem(sizeof(char) * (size_t)(capacity + 1));
 
         memcpy(striped, str->data, striped_size);
@@ -890,7 +885,7 @@ void str_strip_chars(string_t *str, char *characters)
     str_rstrip(str, characters);
 }
 
-string_array_t *str_alloc_split(string_t *str, char *separator, int max_split)
+string_array_t *str_alloc_split(string_t *str, char *separator, int64_t max_split)
 {
     if (check_warnings(str, STR_NULL, __func__))
     {
@@ -900,17 +895,17 @@ string_array_t *str_alloc_split(string_t *str, char *separator, int max_split)
     return split_str(str->data, str->size, separator, max_split);
 }
 
-string_array_t *c_str_alloc_split(const char *data, char *separator, int max_split)
+string_array_t *c_str_alloc_split(const char *data, char *separator, int64_t max_split)
 {
     if (data == NULL)
     {
         return NULL;
     }
 
-    return split_str(data, (int)strlen(data), separator, max_split);
+    return split_str(data, (int64_t)strlen(data), separator, max_split);
 }
 
-bool sa_cmp_str(string_t *str, string_array_t *str_array, int index)
+bool sa_cmp_str(string_t *str, string_array_t *str_array, int64_t index)
 {
     if (check_index(&index, str_array->size, __func__))
     {
@@ -920,7 +915,7 @@ bool sa_cmp_str(string_t *str, string_array_t *str_array, int index)
     return !(strcmp(str->data, (str_array->data_set[index]->data)));
 }
 
-bool sa_cmp_c_str(const char *data, string_array_t *str_array, int index)
+bool sa_cmp_c_str(const char *data, string_array_t *str_array, int64_t index)
 {
     if (check_index(&index, str_array->size, __func__))
     {
@@ -937,7 +932,7 @@ void str_upper(string_t *str)
         return;
     }
 
-    int i = 0;
+    int64_t i = 0;
 
     while (str->data[i] != '\0')
     {
@@ -953,7 +948,7 @@ void str_lower(string_t *str)
         return;
     }
 
-    int i = 0;
+    int64_t i = 0;
 
     while (str->data[i] != '\0')
     {
@@ -969,7 +964,7 @@ void str_swapcase(string_t *str)
         return;
     }
 
-    int i = 0;
+    int64_t i = 0;
 
     while (str->data[i] != '\0')
     {
@@ -997,7 +992,7 @@ void str_title(string_t *str)
 
     str_capitalize(str);
 
-    for (int i = (str->size-1); i > 0; i--)
+    for (int64_t i = (str->size-1); i > 0; i--)
     {
         if (!(isalpha(str->data[i-1])))
         {
@@ -1010,12 +1005,12 @@ string_t *str_alloc_read_keyboard(const char *output_message)
 {
     printf("%s", output_message);
 
-    int input_size = 0;
+    int64_t input_size = 0;
     char input[MAX_CHARS];
     string_t *str = alloc_mem(sizeof(string_t));
 
     fgets(input, MAX_CHARS, stdin);
-    input_size = (int)(strlen(input) - 1);
+    input_size = (int64_t)(strlen(input) - 1);
     input[input_size] = '\0';
 
     str->size = input_size;
@@ -1075,14 +1070,14 @@ string_t *str_alloc_sys_output(const char *cmd)
     return str;
 }
 
-int str_ascii_total(string_t *str)
+int64_t str_ascii_total(string_t *str)
 {
     return c_str_ascii_total(str->data);
 }
 
-int c_str_ascii_total(const char *data)
+int64_t c_str_ascii_total(const char *data)
 {
-    int ascii_total = 0;
+    int64_t ascii_total = 0;
 
     while (*data != '\0')
     {
@@ -1093,7 +1088,7 @@ int c_str_ascii_total(const char *data)
     return ascii_total;
 }
 
-int str_int(string_t *str)
+int64_t str_int(string_t *str)
 {
     if (check_warnings(str, STR_NULL, __func__))
     {
@@ -1113,13 +1108,13 @@ double str_double(string_t *str)
     return atof(str->data);
 }
 
-string_t *str_alloc_int_binary(int number, int bits_shown)
+string_t *str_alloc_int_binary(int64_t number, int64_t bits_shown)
 {
     string_t *bi_num = str_alloc("");
 
     while (number > 0)
     {
-        str_before(bi_num, get_str_bit(number % 2));
+        str_before(bi_num, get_str_number(number % 2));
         number /= 2;
     }
 
@@ -1127,7 +1122,7 @@ string_t *str_alloc_int_binary(int number, int bits_shown)
     {
         bits_shown -= bi_num->size;
 
-        for (int i = 0; i < bits_shown; i++)
+        for (int64_t i = 0; i < bits_shown; i++)
         {
             str_before(bi_num, "0");
         }
@@ -1136,12 +1131,12 @@ string_t *str_alloc_int_binary(int number, int bits_shown)
     return bi_num;
 }
 
-string_t *str_alloc_cstr_binary(const char *number, int bits_shown)
+string_t *str_alloc_cstr_binary(const char *number, int64_t bits_shown)
 {
     return str_alloc_int_binary(atoi(number), bits_shown);
 }
 
-string_t *str_alloc_binary(string_t *str, int bits_shown)
+string_t *str_alloc_binary(string_t *str, int64_t bits_shown)
 {
     if (check_warnings(str, STR_NULL, __func__))
     {
@@ -1151,7 +1146,7 @@ string_t *str_alloc_binary(string_t *str, int bits_shown)
     return str_alloc_int_binary(str_int(str), bits_shown);
 }
 
-string_t *str_alloc_int_decimal(int number)
+string_t *str_alloc_int_decimal(int64_t number)
 {
     string_t *digits = str_alloc("");
 
@@ -1193,8 +1188,8 @@ void str_array_print(string_array_t *str_array, const char *beginning, const cha
         return;
     }
 
-    int i;
-    int last_index = (str_array->size-1);
+    int64_t i;
+    int64_t last_index = (str_array->size-1);
 
     printf("%s{", beginning);
 
@@ -1237,7 +1232,7 @@ void str_array_free(string_array_t **str_array)
         return;
     }
 
-    for (int i = 0; i < (*str_array)->size; i++)
+    for (int64_t i = 0; i < (*str_array)->size; i++)
     {
         str_free(&(*str_array)->data_set[i]);
     }
