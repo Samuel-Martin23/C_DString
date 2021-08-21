@@ -54,7 +54,19 @@ static bool check_warnings(string_t *str, u_int16_t warning_code, const char *fu
     return false;
 }
 
-static char *strsep_m(char **data, char *separator) 
+static bool is_not_valid_str(const char *data, const char *func_name)
+{
+    bool is_valid_str = ((data != NULL) && (data[0] != '\0'));
+
+    if (!(is_valid_str))
+    {
+        printf("%s: %swarning:%s string literal is not a valid string%s\n", func_name, PURPLE, WHITE, RESET);
+    }
+
+    return !(is_valid_str);
+}
+
+static char *strsep_m(char **data, const char *separator) 
 {
     if (*data == NULL)
     {
@@ -262,7 +274,7 @@ static string_t *read_content(FILE *fp)
     return str;
 }
 
-static string_array_t *split_str(const char *data, int64_t size, char *separator, int64_t max_split)
+static string_array_t *split_str(const char *data, int64_t size, const char *separator, int64_t max_split)
 {
     int64_t i = 0;
     char *split = NULL;
@@ -386,10 +398,16 @@ char *str_get_literal(string_t *str)
     return str->data;
 }
 
+/*
 void str_set_size(string_t *str, int64_t size)
 {
     if (check_warnings(str, STR_NULL, __func__))
     {
+        return;
+    }
+    else if (size < 0)
+    {
+        printf("%s: %swarning:%s size is less than 0%s\n", __func__, PURPLE, WHITE, RESET);
         return;
     }
 
@@ -402,6 +420,11 @@ void str_set_capacity(string_t *str, int64_t capacity)
     {
         return;
     }
+    else if (capacity < 0)
+    {
+        printf("%s: %swarning:%s capacity is less than 0%s\n", __func__, PURPLE, WHITE, RESET);
+        return;
+    }
 
     str->capacity = capacity;
 }
@@ -412,11 +435,16 @@ void str_set_literal(string_t *str, char *data)
     {
         return;
     }
+    else if (is_not_valid_str(data, __func__))
+    {
+        return;
+    }
 
     str->data = data;
 }
+*/
 
-int64_t sa_get_size(string_array_t *str_array)
+int64_t str_array_get_size(string_array_t *str_array)
 {
     if (str_array == NULL)
     {
@@ -427,21 +455,22 @@ int64_t sa_get_size(string_array_t *str_array)
     return str_array->size;
 }
 
-string_t *sa_get_index(string_array_t *str_array, int64_t index)
+string_t *str_array_get_index(string_array_t *str_array, int64_t index)
 {
-    if (check_index(&index, str_array->size, __func__))
-    {
-        return NULL;
-    }
-    else if (str_array == NULL)
+    if (str_array == NULL)
     {
         printf("%s: %swarning:%s string_array is NULL%s\n", __func__, PURPLE, WHITE, RESET);
+        return NULL;
+    }
+    else if (check_index(&index, str_array->size, __func__))
+    {
         return NULL;
     }
 
     return str_array->data_set[index];
 }
 
+/*
 void sa_set_size(string_array_t *str_array, int64_t size)
 {
     if (str_array == NULL)
@@ -467,6 +496,7 @@ void sa_set_index(string_array_t *str_array, int64_t index, string_t *str)
 
     str_array->data_set[index] = str;
 }
+*/
 
 string_t *str_alloc(const char *data)
 {
@@ -505,7 +535,8 @@ string_t *str_alloc_va(int64_t size, ...)
 
 void str_append(string_t *str, const char *data)
 {
-    if (check_warnings(str, STR_NULL, __func__))
+    if (check_warnings(str, STR_NULL, __func__)
+        || is_not_valid_str(data, __func__))
     {
         return;
     }
@@ -604,7 +635,8 @@ void str_add_equals_va(string_t *str, int64_t size, ...)
 
 void str_before(string_t *str, const char *data)
 {
-    if (check_warnings(str, STR_NULL, __func__))
+    if (check_warnings(str, STR_NULL, __func__)
+        || is_not_valid_str(data, __func__))
     {
         return;
     }
@@ -772,7 +804,8 @@ void str_erase_index(string_t *str, int64_t start, int64_t end)
 
 int64_t str_find(string_t *str, const char *search_val)
 {
-    if (check_warnings(str, STR_NULL, __func__))
+    if (check_warnings(str, STR_NULL, __func__)
+        || is_not_valid_str(search_val, __func__))
     {
         return -1;
     }
@@ -784,7 +817,8 @@ int64_t str_find(string_t *str, const char *search_val)
 
 int64_t str_count(string_t *str, const char *search_val, int64_t start, int64_t end)
 {
-    if (check_warnings(str, STR_NULL, __func__) || *search_val == '\0' 
+    if (check_warnings(str, STR_NULL, __func__)
+        || is_not_valid_str(search_val, __func__) 
         || check_ranges(&start, &end, str->size, __func__))
     {
         return 0;
@@ -795,7 +829,8 @@ int64_t str_count(string_t *str, const char *search_val, int64_t start, int64_t 
 
 void str_lstrip(string_t *str, const char *characters)
 {
-    if (check_warnings(str, STR_NULL, __func__))
+    if (check_warnings(str, STR_NULL, __func__)
+        || is_not_valid_str(characters, __func__))
     {
         return;
     }
@@ -829,7 +864,8 @@ void str_lstrip(string_t *str, const char *characters)
 
 void str_rstrip(string_t *str, const char *characters)
 {
-    if (check_warnings(str, STR_NULL, __func__))
+    if (check_warnings(str, STR_NULL, __func__)
+        || is_not_valid_str(characters, __func__))
     {
         return;
     }
@@ -873,9 +909,10 @@ void str_strip(string_t *str)
     str_rstrip(str, "\n ");
 }
 
-void str_strip_chars(string_t *str, char *characters)
+void str_strip_chars(string_t *str, const char *characters)
 {
-    if (check_warnings(str, STR_NULL, __func__))
+    if (check_warnings(str, STR_NULL, __func__)
+        || is_not_valid_str(characters, __func__))
     {
         return;
     }
@@ -884,9 +921,10 @@ void str_strip_chars(string_t *str, char *characters)
     str_rstrip(str, characters);
 }
 
-string_array_t *str_alloc_split(string_t *str, char *separator, int64_t max_split)
+string_array_t *str_alloc_split(string_t *str, const char *separator, int64_t max_split)
 {
-    if (check_warnings(str, STR_NULL, __func__))
+    if (check_warnings(str, STR_NULL, __func__)
+        || is_not_valid_str(separator, __func__))
     {
         return NULL;
     }
@@ -894,9 +932,10 @@ string_array_t *str_alloc_split(string_t *str, char *separator, int64_t max_spli
     return split_str(str->data, str->size, separator, max_split);
 }
 
-string_array_t *str_alloc_cstr_split(const char *data, char *separator, int64_t max_split)
+string_array_t *str_alloc_cstr_split(const char *data, const char *separator, int64_t max_split)
 {
-    if (data == NULL)
+    if (is_not_valid_str(data, __func__)
+        || is_not_valid_str(separator, __func__))
     {
         return NULL;
     }
@@ -1023,7 +1062,7 @@ string_t *str_alloc_read_keyboard(const char *output_message)
 
 string_t *str_alloc_read_file(const char *path)
 {
-    if (*path == '\0')
+    if (is_not_valid_str(path, __func__))
     {
         return NULL;
     }
@@ -1037,7 +1076,8 @@ string_t *str_alloc_read_file(const char *path)
 
 void str_write_file(string_t *str, const char *path, bool append_file)
 {
-    if (check_warnings(str, STR_NULL, __func__) || *path == '\0')
+    if (check_warnings(str, STR_NULL, __func__)
+        || is_not_valid_str(path, __func__))
     {
         return;
     }
@@ -1076,6 +1116,11 @@ int64_t str_ascii_total(string_t *str)
 
 int64_t c_str_ascii_total(const char *data)
 {
+    if (is_not_valid_str(data, __func__))
+    {
+        return -1;
+    }
+
     int64_t ascii_total = 0;
 
     while (*data != '\0')
@@ -1132,6 +1177,11 @@ string_t *str_alloc_ll_to_binary_str(int64_t number, int64_t bits_shown)
 
 string_t *str_alloc_cstr_to_binary_str(const char *number, int64_t bits_shown)
 {
+    if (is_not_valid_str(number, __func__))
+    {
+        return NULL;
+    }
+
     return str_alloc_ll_to_binary_str(atoll(number), bits_shown);
 }
 
