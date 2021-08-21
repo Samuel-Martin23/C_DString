@@ -894,7 +894,7 @@ string_array_t *str_alloc_split(string_t *str, char *separator, int64_t max_spli
     return split_str(str->data, str->size, separator, max_split);
 }
 
-string_array_t *c_str_alloc_split(const char *data, char *separator, int64_t max_split)
+string_array_t *str_alloc_cstr_split(const char *data, char *separator, int64_t max_split)
 {
     if (data == NULL)
     {
@@ -1107,7 +1107,7 @@ double str_double(string_t *str)
     return atof(str->data);
 }
 
-string_t *str_alloc_ll_binary(int64_t number, int64_t bits_shown)
+string_t *str_alloc_ll_to_binary_str(int64_t number, int64_t bits_shown)
 {
     string_t *bi_num = str_alloc("");
 
@@ -1130,22 +1130,22 @@ string_t *str_alloc_ll_binary(int64_t number, int64_t bits_shown)
     return bi_num;
 }
 
-string_t *str_alloc_cstr_binary(const char *number, int64_t bits_shown)
+string_t *str_alloc_cstr_to_binary_str(const char *number, int64_t bits_shown)
 {
-    return str_alloc_ll_binary(atoll(number), bits_shown);
+    return str_alloc_ll_to_binary_str(atoll(number), bits_shown);
 }
 
-string_t *str_alloc_binary(string_t *str, int64_t bits_shown)
+string_t *str_alloc_str_to_binary_str(string_t *str, int64_t bits_shown)
 {
     if (check_warnings(str, STR_NULL, __func__))
     {
         return NULL;
     }
 
-    return str_alloc_ll_binary(str_ll(str), bits_shown);
+    return str_alloc_ll_to_binary_str(str_ll(str), bits_shown);
 }
 
-string_t *str_alloc_int_decimal(int64_t number)
+string_t *str_alloc_ll_to_str(int64_t number)
 {
     string_t *digits = str_alloc("");
 
@@ -1166,6 +1166,11 @@ char *c_str_alloc(const char *data)
 
 string_t *str_alloc_copy(string_t *str)
 {
+    if (check_warnings(str, STR_NULL, __func__))
+    {
+        return NULL;
+    }
+
     return str_alloc(str->data);
 }
 
