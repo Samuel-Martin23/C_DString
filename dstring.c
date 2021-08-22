@@ -301,16 +301,19 @@ static string_array_t *split_str(const char *data, int64_t size, const char *sep
     return str_array;
 }
 
-static int64_t calculate_capacity(int64_t size)
+static int64_t update_capacity(int64_t size, int64_t capacity)
 {
-    int64_t capacity = DEFAULT_CAPACITY;
-
     while (size > capacity)
     {
         capacity *= 2;
     }
 
     return capacity;
+}
+
+static int64_t calculate_capacity(int64_t size)
+{
+    return update_capacity(size, DEFAULT_CAPACITY);
 }
 
 static void set_empty_str(string_t *str)
@@ -350,7 +353,7 @@ static char *get_str_number(int8_t number)
     return "";
 }
 
-static int64_t update_capacity(string_t *str, const char *data)
+static int64_t str_realloc_capacity(string_t *str, const char *data)
 {
     int64_t old_capacity = 0;
     int64_t data_size = (int64_t)strlen(data);
@@ -359,7 +362,7 @@ static int64_t update_capacity(string_t *str, const char *data)
     if (str->size > str->capacity)
     {
         old_capacity = str->capacity;
-        str->capacity = calculate_capacity(str->size);
+        str->capacity = update_capacity(str->size, str->capacity);
         str->data = realloc(str->data, sizeof(char) * (size_t)(str->capacity + 1));
 
         mem_usage.allocated += (u_int32_t)(sizeof(char) * (size_t)(str->capacity - old_capacity));
@@ -372,7 +375,7 @@ int64_t str_get_size(string_t *str)
 {
     if (check_warnings(str, STR_NULL, __func__))
     {
-        return 0;
+        return -1;
     }
 
     return str->size;
@@ -382,7 +385,7 @@ int64_t str_get_capacity(string_t *str)
 {
     if (check_warnings(str, STR_NULL, __func__))
     {
-        return 0;
+        return -1;
     }
 
     return str->capacity;
@@ -502,7 +505,7 @@ string_t *str_alloc(const char *data)
 {
     string_t *str = alloc_mem(sizeof(string_t));
 
-    str->size = (int)strlen(data);
+    str->size = (int64_t)strlen(data);
     str->capacity = calculate_capacity(str->size);
     str->data = alloc_mem(sizeof(char) * (size_t)(str->capacity + 1));
 
@@ -541,7 +544,7 @@ void str_append(string_t *str, const char *data)
         return;
     }
 
-    int64_t data_size = update_capacity(str, data);
+    int64_t data_size = str_realloc_capacity(str, data);
 
     memcpy(&str->data[str->size - data_size], data, data_size + 1);
 }
@@ -641,7 +644,7 @@ void str_before(string_t *str, const char *data)
         return;
     }
 
-    int64_t data_size = update_capacity(str, data);
+    int64_t data_size = str_realloc_capacity(str, data);
 
     memcpy(&str->data[data_size], str->data, str->size+1);
     memcpy(str->data, data, data_size);
