@@ -845,7 +845,11 @@ void str_lstrip(string_t *str, const char *characters)
         copy++;
     }
 
-    if (*copy != '\0')
+    if (copy == str->data)
+    {
+        return;
+    }
+    else if (*copy != '\0')
     {
         int64_t striped_size = str->size - (copy - str->data);
         int64_t capacity = calculate_capacity(striped_size);
@@ -880,7 +884,11 @@ void str_rstrip(string_t *str, const char *characters)
         forward--;
     }
 
-    if (*forward != '\0')
+    if (forward == (str->data + str->size))
+    {
+        return;
+    }
+    else if (forward != str->data)
     {
         int64_t striped_size = forward - str->data;
         int64_t capacity = calculate_capacity(striped_size);
