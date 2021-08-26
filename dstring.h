@@ -79,7 +79,6 @@ void str_print(string_t *str, const char *beginning, const char *end);
 void str_array_print(string_array_t *str_array, const char *beginning, const char *end);
 void c_str_free(char **curr);
 void str_free(string_t **str);
-void str_data_free(string_t *str);
 void str_array_free(string_array_t **str_array);
 
 #endif /* DSTRING_H */

@@ -66,6 +66,42 @@ static bool is_not_valid_str(const char *data, const char *func_name)
     return !(is_valid_str);
 }
 
+static bool is_str_null(const char *data, const char *func_name)
+{
+    bool is_valid_str = (data == NULL);
+
+    if (is_valid_str)
+    {
+        printf("%s: %swarning:%s string is NULL%s\n", func_name, PURPLE, WHITE, RESET);
+    }
+
+    return is_valid_str;
+}
+
+static bool is_pointer_null(void *data, const char *func_name)
+{
+    bool is_valid_pointer = (data == NULL);
+
+    if (is_valid_pointer)
+    {
+        printf("%s: %swarning:%s pointer is NULL%s\n", func_name, PURPLE, WHITE, RESET);
+    }
+
+    return is_valid_pointer;
+}
+
+static bool is_string_array_null(string_array_t *str_array, const char *func_name)
+{
+    bool is_str_array_null = (str_array == NULL);
+
+    if (is_str_array_null)
+    {
+        printf("%s: %swarning:%s string_array is NULL%s\n", func_name, PURPLE, WHITE, RESET);
+    }
+
+    return is_str_array_null;
+}
+
 static char *strsep_m(char **data, const char *separator) 
 {
     if (*data == NULL)
@@ -371,6 +407,11 @@ static int64_t str_realloc_capacity(string_t *str, const char *data)
     return data_size;
 }
 
+static void str_data_free(string_t *str)
+{
+    free_mem(str->data, sizeof(char) * (size_t)(str->capacity + 1));
+}
+
 int64_t str_get_size(string_t *str)
 {
     if (check_warnings(str, STR_NULL, __func__))
@@ -449,9 +490,8 @@ void str_set_literal(string_t *str, char *data)
 
 int64_t str_array_get_size(string_array_t *str_array)
 {
-    if (str_array == NULL)
+    if (is_string_array_null(str_array, __func__))
     {
-        printf("%s: %swarning:%s string_array is NULL%s\n", __func__, PURPLE, WHITE, RESET);
         return -1;
     }
 
@@ -460,12 +500,8 @@ int64_t str_array_get_size(string_array_t *str_array)
 
 string_t *str_array_get_index(string_array_t *str_array, int64_t index)
 {
-    if (str_array == NULL)
-    {
-        printf("%s: %swarning:%s string_array is NULL%s\n", __func__, PURPLE, WHITE, RESET);
-        return NULL;
-    }
-    else if (check_index(&index, str_array->size, __func__))
+    if (is_string_array_null(str_array, __func__)
+        || check_index(&index, str_array->size, __func__))
     {
         return NULL;
     }
@@ -503,6 +539,11 @@ void sa_set_index(string_array_t *str_array, int64_t index, string_t *str)
 
 string_t *str_alloc(const char *data)
 {
+    if (is_str_null(data, __func__))
+    {
+        return NULL;
+    }
+
     string_t *str = alloc_mem(sizeof(string_t));
 
     str->size = (int64_t)strlen(data);
@@ -704,7 +745,9 @@ string_t *str_alloc_substr(string_t *str, int64_t *start_opt, int64_t *end_opt, 
 
 void str_replace(string_t *str, const char *old, const char *new)
 {
-    if (check_warnings(str, STR_NULL, __func__))
+    if (check_warnings(str, STR_NULL, __func__)
+        || is_str_null(old, __func__)
+        || is_str_null(new, __func__))
     {
         return;
     }
@@ -714,7 +757,9 @@ void str_replace(string_t *str, const char *old, const char *new)
 
 void str_replace_count(string_t *str, const char *old, const char *new, int64_t count)
 {
-    if (check_warnings(str, STR_NULL, __func__))
+    if (check_warnings(str, STR_NULL, __func__)
+        || is_str_null(old, __func__)
+        || is_str_null(new, __func__))
     {
         return;
     }
@@ -764,7 +809,8 @@ void str_replace_count(string_t *str, const char *old, const char *new, int64_t 
 
 void str_erase(string_t *str, const char *data)
 {
-    if (check_warnings(str, STR_NULL, __func__))
+    if (check_warnings(str, STR_NULL, __func__)
+        || is_str_null(data, __func__))
     {
         return;
     }
@@ -774,7 +820,8 @@ void str_erase(string_t *str, const char *data)
 
 void str_erase_count(string_t *str, const char *data, int64_t count)
 {
-    if (check_warnings(str, STR_NULL, __func__))
+    if (check_warnings(str, STR_NULL, __func__)
+        || is_str_null(data, __func__))
     {
         return;
     }
@@ -956,7 +1003,9 @@ string_array_t *str_alloc_cstr_split(const char *data, const char *separator, in
 
 bool sa_cmp_str(string_t *str, string_array_t *str_array, int64_t index)
 {
-    if (check_index(&index, str_array->size, __func__))
+    if (check_warnings(str, STR_NULL, __func__)
+        || is_string_array_null(str_array, __func__)
+        || check_index(&index, str_array->size, __func__))
     {
         return false;
     }
@@ -966,7 +1015,9 @@ bool sa_cmp_str(string_t *str, string_array_t *str_array, int64_t index)
 
 bool sa_cmp_c_str(const char *data, string_array_t *str_array, int64_t index)
 {
-    if (check_index(&index, str_array->size, __func__))
+    if (is_str_null(data, __func__)
+        || is_string_array_null(str_array, __func__)
+        || check_index(&index, str_array->size, __func__))
     {
         return false;
     }
@@ -1108,7 +1159,7 @@ void str_write_file(string_t *str, const char *path, bool append_file)
 
 string_t *str_alloc_sys_output(const char *cmd)
 {
-    if (*cmd == '\0')
+    if (is_not_valid_str(cmd, __func__))
     {
         return NULL;
     }
@@ -1221,6 +1272,11 @@ string_t *str_alloc_ll_to_str(int64_t number)
 
 char *c_str_alloc(const char *data)
 {
+    if (is_str_null(data, __func__))
+    {
+        return NULL;
+    }
+
     mem_usage.allocated += sizeof(char) * (strlen(data) + 1);
     return strdup(data);
 }
@@ -1237,7 +1293,9 @@ string_t *str_alloc_copy(string_t *str)
 
 void str_print(string_t *str, const char *beginning, const char *end)
 {
-    if (check_warnings(str, STR_NULL, __func__))
+    if (check_warnings(str, STR_NULL, __func__)
+        || is_str_null(beginning, __func__)
+        || is_str_null(end, __func__))
     {
         return;
     }
@@ -1247,9 +1305,10 @@ void str_print(string_t *str, const char *beginning, const char *end)
 
 void str_array_print(string_array_t *str_array, const char *beginning, const char *end)
 {
-    if (str_array == NULL)
+    if (is_string_array_null(str_array, __func__)
+        || is_str_null(beginning, __func__)
+        || is_str_null(end, __func__))
     {
-        printf("%s: %swarning:%s string_array is NULL%s\n", __func__, PURPLE, WHITE, RESET);
         return;
     }
 
@@ -1268,13 +1327,20 @@ void str_array_print(string_array_t *str_array, const char *beginning, const cha
 
 void c_str_free(char **data)
 {
+    if (is_pointer_null(data, __func__) || 
+        is_str_null(*data, __func__))
+    {
+        return;
+    }
+
     free_mem(*data, sizeof(char) * (strlen(*data)+1));
     *data = NULL;
 }
 
 void str_free(string_t **str)
 {
-    if (check_warnings(*str, STR_NULL, __func__))
+    if (is_pointer_null(str, __func__)
+        || check_warnings(*str, STR_NULL, __func__))
     {
         return;
     }
@@ -1284,14 +1350,10 @@ void str_free(string_t **str)
     *str = NULL;
 }
 
-void str_data_free(string_t *str)
-{
-    free_mem(str->data, sizeof(char) * (size_t)(str->capacity + 1));
-}
-
 void str_array_free(string_array_t **str_array)
 {
-    if (*str_array == NULL)
+    if (is_pointer_null(str_array, __func__)
+        || is_string_array_null(*str_array, __func__))
     {
         printf("%s: %swarning:%s string_array is NULL%s\n", __func__, PURPLE, WHITE, RESET);
         return;
