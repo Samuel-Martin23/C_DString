@@ -1103,6 +1103,11 @@ void str_title(string_t *str)
 
 string_t *str_alloc_read_keyboard(const char *output_message)
 {
+    if (is_str_null(output_message, __func__))
+    {
+        return NULL;
+    }
+
     printf("%s", output_message);
 
     int64_t input_size = 0;
