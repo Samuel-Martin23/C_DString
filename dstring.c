@@ -60,7 +60,7 @@ static bool is_not_valid_str(const char *data, const char *func_name)
 
     if (!(is_valid_str))
     {
-        printf("%s: %swarning:%s string literal is not a valid string%s\n", func_name, PURPLE, WHITE, RESET);
+        printf("%s: %swarning:%s string literal input is not a valid string%s\n", func_name, PURPLE, WHITE, RESET);
     }
 
     return !(is_valid_str);
@@ -68,14 +68,14 @@ static bool is_not_valid_str(const char *data, const char *func_name)
 
 static bool is_str_null(const char *data, const char *func_name)
 {
-    bool is_valid_str = (data == NULL);
+    bool is_null = (data == NULL);
 
-    if (is_valid_str)
+    if (is_null)
     {
         printf("%s: %swarning:%s string literal input is NULL%s\n", func_name, PURPLE, WHITE, RESET);
     }
 
-    return is_valid_str;
+    return is_null;
 }
 
 static bool is_pointer_null(void *data, const char *func_name)
