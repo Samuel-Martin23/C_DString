@@ -1360,7 +1360,6 @@ void str_array_free(string_array_t **str_array)
     if (is_pointer_null(str_array, __func__)
         || is_string_array_null(*str_array, __func__))
     {
-        printf("%s: %swarning:%s string_array is NULL%s\n", __func__, PURPLE, WHITE, RESET);
         return;
     }
 
