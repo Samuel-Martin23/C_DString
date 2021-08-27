@@ -9,7 +9,7 @@
 #define WHITE                       "\033[1;97m"
 #define RESET                       "\033[0m"
 
-#define DEFAULT_CAPACITY            16
+#define DEFAULT_CAPACITY            32
 
 typedef struct string
 {
@@ -72,7 +72,7 @@ static bool is_str_null(const char *data, const char *func_name)
 
     if (is_valid_str)
     {
-        printf("%s: %swarning:%s string is NULL%s\n", func_name, PURPLE, WHITE, RESET);
+        printf("%s: %swarning:%s string literal input is NULL%s\n", func_name, PURPLE, WHITE, RESET);
     }
 
     return is_valid_str;
@@ -84,7 +84,7 @@ static bool is_pointer_null(void *data, const char *func_name)
 
     if (is_valid_pointer)
     {
-        printf("%s: %swarning:%s pointer is NULL%s\n", func_name, PURPLE, WHITE, RESET);
+        printf("%s: %swarning:%s pointer input is NULL%s\n", func_name, PURPLE, WHITE, RESET);
     }
 
     return is_valid_pointer;
