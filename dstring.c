@@ -360,8 +360,14 @@ static void set_empty_str(string_t *str)
     str->data[0] = '\0';
 }
 
-static string_t *alloc_substr(const char *data, int64_t data_size, int64_t *start_opt, int64_t *end_opt, int64_t *step_opt)
+static string_t *alloc_substr(const char *data, int64_t data_size, int64_t *start_opt, int64_t *end_opt, int64_t *step_opt, const char *function_name)
 {
+    if (data_size <= 0)
+    {
+        printf("%s: %swarning:%s size of the string is less than or equal to zero%s\n", function_name, PURPLE, WHITE, RESET);
+        return NULL;
+    }
+
     int64_t step = 0;
 
     if (step_opt == NULL)
@@ -745,7 +751,7 @@ string_t *str_alloc_substr(string_t *str, int64_t *start_opt, int64_t *end_opt, 
         return NULL;
     }
 
-    return alloc_substr(str->data, str->size, start_opt, end_opt, step_opt);
+    return alloc_substr(str->data, str->size, start_opt, end_opt, step_opt, __func__);
 }
 
 
@@ -756,7 +762,7 @@ string_t *str_alloc_c_substr(const char *data, int64_t *start_opt, int64_t *end_
         return NULL;
     }
 
-    return alloc_substr(data, (int64_t)strlen(data), start_opt, end_opt, step_opt);
+    return alloc_substr(data, (int64_t)strlen(data), start_opt, end_opt, step_opt, __func__);
 }
 
 void str_replace(string_t *str, const char *old, const char *new)
