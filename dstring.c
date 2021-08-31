@@ -376,7 +376,7 @@ static string_t *alloc_substr(const char *data, int64_t data_size, int64_t *star
     }
     else if (*step_opt == 0)
     {
-        printf("%s: %swarning:%s slice step cannot be equal to zero%s\n", __func__, PURPLE, WHITE, RESET);
+        printf("%s: %swarning:%s slice step cannot be equal to zero%s\n", function_name, PURPLE, WHITE, RESET);
         return NULL;
     }
     else
