@@ -360,6 +360,53 @@ static void set_empty_str(string_t *str)
     str->data[0] = '\0';
 }
 
+static string_t *alloc_substr(const char *data, int64_t data_size, int64_t *start_opt, int64_t *end_opt, int64_t *step_opt)
+{
+    int64_t step = 0;
+
+    if (step_opt == NULL)
+    {
+        step = 1;
+    }
+    else if (*step_opt == 0)
+    {
+        printf("%s: %swarning:%s slice step cannot be equal to zero%s\n", __func__, PURPLE, WHITE, RESET);
+        return NULL;
+    }
+    else
+    {
+        step = *step_opt;
+    }
+
+    bool is_step_neg = (step < 0);
+    int64_t start = get_start_index(start_opt, data_size, is_step_neg);
+    int64_t end = get_end_index(end_opt, data_size, is_step_neg);
+    int64_t size = get_sub_size(start, end, is_step_neg);
+    string_t *sub_str = alloc_mem(sizeof(string_t));
+
+    if (size == 0 || start >= data_size)
+    {
+        set_empty_str(sub_str);
+        return sub_str;
+    }
+
+    int64_t abs_step = llabs(step);
+
+    sub_str->size = (abs_step >= size) ? 1 : ceil_ll(size, abs_step);
+    sub_str->capacity = calculate_capacity(sub_str->size);
+    sub_str->data = alloc_mem(sizeof(char) * (size_t)(sub_str->capacity + 1));
+
+    for (int64_t i = 0; i < sub_str->size; i++)
+    {
+        sub_str->data[i] = data[start];
+        start += step;
+    }
+
+    sub_str->data[sub_str->size] = '\0';
+
+    return sub_str;
+}
+
 static char *get_str_number(int8_t number)
 {
     switch (number)
@@ -698,49 +745,18 @@ string_t *str_alloc_substr(string_t *str, int64_t *start_opt, int64_t *end_opt, 
         return NULL;
     }
 
-    int64_t step = 0;
+    return alloc_substr(str->data, str->size, start_opt, end_opt, step_opt);
+}
 
-    if (step_opt == NULL)
+
+string_t *str_alloc_c_substr(const char *data, int64_t *start_opt, int64_t *end_opt, int64_t *step_opt)
+{
+    if (is_not_valid_str(data, __func__))
     {
-        step = 1;
-    }
-    else if (*step_opt == 0)
-    {
-        printf("%s: %swarning:%s slice step cannot be equal to zero%s\n", __func__, PURPLE, WHITE, RESET);
         return NULL;
     }
-    else
-    {
-        step = *step_opt;
-    }
 
-    bool is_step_neg = (step < 0);
-    int64_t start = get_start_index(start_opt, str->size, is_step_neg);
-    int64_t end = get_end_index(end_opt, str->size, is_step_neg);
-    int64_t size = get_sub_size(start, end, is_step_neg);
-    string_t *sub_str = alloc_mem(sizeof(string_t));
-
-    if (size == 0)
-    {
-        set_empty_str(sub_str);
-        return sub_str;
-    }
-
-    int64_t abs_step = llabs(step);
-
-    sub_str->size = (abs_step >= size) ? 1 : ceil_ll(size, abs_step);
-    sub_str->capacity = calculate_capacity(sub_str->size);
-    sub_str->data = alloc_mem(sizeof(char) * (size_t)(sub_str->capacity + 1));
-
-    for (int64_t i = 0; i < sub_str->size; i++)
-    {
-        sub_str->data[i] = str->data[start];
-        start += step;
-    }
-
-    sub_str->data[sub_str->size] = '\0';
-
-    return sub_str;
+    return alloc_substr(data, (int64_t)strlen(data), start_opt, end_opt, step_opt);
 }
 
 void str_replace(string_t *str, const char *old, const char *new)
@@ -1001,7 +1017,7 @@ string_array_t *str_alloc_cstr_split(const char *data, const char *separator, in
     return split_str(data, (int64_t)strlen(data), separator, max_split);
 }
 
-bool sa_cmp_str(string_t *str, string_array_t *str_array, int64_t index)
+bool str_array_cmp_str(string_t *str, string_array_t *str_array, int64_t index)
 {
     if (check_warnings(str, STR_NULL, __func__)
         || is_string_array_null(str_array, __func__)
@@ -1013,7 +1029,7 @@ bool sa_cmp_str(string_t *str, string_array_t *str_array, int64_t index)
     return !(strcmp(str->data, (str_array->data_set[index]->data)));
 }
 
-bool sa_cmp_c_str(const char *data, string_array_t *str_array, int64_t index)
+bool str_array_cmp_c_str(const char *data, string_array_t *str_array, int64_t index)
 {
     if (is_str_null(data, __func__)
         || is_string_array_null(str_array, __func__)
