@@ -1494,7 +1494,7 @@ string_array_t *str_array_alloc_read_keyboard(int64_t size, ...)
     return str_array;
 }
 
-bool str_array_cmp(string_t *str, string_array_t *str_array, int64_t index)
+bool str_array_cmp(string_array_t *str_array, int64_t index, string_t *str)
 {
     if (is_str_null(str, __func__)
         || is_str_array_null(str_array, __func__)
@@ -1506,7 +1506,7 @@ bool str_array_cmp(string_t *str, string_array_t *str_array, int64_t index)
     return !(strcmp(str->data, (str_array->data_set[index]->data)));
 }
 
-bool str_array_cmp_c_str(const char *data, string_array_t *str_array, int64_t index)
+bool str_array_cmp_c_str(string_array_t *str_array, int64_t index, const char *data)
 {
     if (is_c_str_null(data, __func__)
         || is_str_array_null(str_array, __func__)

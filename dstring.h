@@ -85,8 +85,8 @@ string_array_t *str_array_alloc_c_strs(int64_t size, ...);
 string_array_t *str_alloc_split(string_t *str, const char *separator, int64_t max_split);
 string_array_t *str_alloc_c_str_split(const char *data, const char *separator, int64_t max_split);
 string_array_t *str_array_alloc_read_keyboard(int64_t size, ...);
-bool str_array_cmp_str(string_t *str, string_array_t *str_array, int64_t index);
-bool str_array_cmp_c_str(const char *data, string_array_t *str_array, int64_t index);
+bool str_array_cmp(string_array_t *str_array, int64_t index, string_t *str);
+bool str_array_cmp_c_str(string_array_t *str_array, int64_t index, const char *data);
 void str_array_print(string_array_t *str_array, const char *beginning, const char *end);
 void str_array_free(string_array_t **str_array);
 
