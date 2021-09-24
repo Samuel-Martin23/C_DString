@@ -67,7 +67,7 @@ static bool is_str_array_null(string_array_t *str_array, const char *func_name)
     return is_null;
 }
 
-static bool is_size_less_zero(int64_t size, const char *func_name)
+static bool is_size_less_or_zero(int64_t size, const char *func_name)
 {
     bool is_valid_size = (size <= 0);
 
@@ -352,7 +352,7 @@ static void set_empty_str(string_t *str)
 
 static string_t *alloc_substr(const char *data, int64_t data_size, int64_t *start_opt, int64_t *end_opt, int64_t *step_opt, const char *function_name)
 {
-    if (is_size_less_zero(data_size, __func__))
+    if (is_size_less_or_zero(data_size, __func__))
     {
         return NULL;
     }
@@ -561,7 +561,7 @@ string_t *str_alloc(const char *data)
 
 string_t *str_alloc_va(int64_t size, ...)
 {
-    if (is_size_less_zero(size, __func__))
+    if (is_size_less_or_zero(size, __func__))
     {
         return NULL;
     }
@@ -601,7 +601,7 @@ void str_append_va(string_t *str, int64_t size, ...)
         return;
     }
 
-    if (is_size_less_zero(size, __func__))
+    if (is_size_less_or_zero(size, __func__))
     {
         return;
     }
@@ -624,7 +624,7 @@ string_t *str_add(string_t *curr_str, string_t *newest_str)
 
 string_t *str_add_va(int64_t size, ...)
 {
-    if (is_size_less_zero(size, __func__))
+    if (is_size_less_or_zero(size, __func__))
     {
         return NULL;
     }
@@ -665,7 +665,7 @@ void str_add_equals_va(string_t *str, int64_t size, ...)
         return;
     }
 
-    if (is_size_less_zero(size, __func__))
+    if (is_size_less_or_zero(size, __func__))
     {
         return;
     }
@@ -1393,7 +1393,7 @@ string_t *str_array_get_index(string_array_t *str_array, int64_t index)
 
 string_array_t *str_array_alloc(int64_t size)
 {
-    if (is_size_less_zero(size, __func__))
+    if (is_size_less_or_zero(size, __func__))
     {
         return NULL;
     }
@@ -1412,7 +1412,7 @@ string_array_t *str_array_alloc(int64_t size)
 
 string_array_t *str_array_alloc_strs(int64_t size, ...)
 {
-    if (is_size_less_zero(size, __func__))
+    if (is_size_less_or_zero(size, __func__))
     {
         return NULL;
     }
@@ -1436,7 +1436,7 @@ string_array_t *str_array_alloc_strs(int64_t size, ...)
 
 string_array_t *str_array_alloc_c_strs(int64_t size, ...)
 {
-    if (is_size_less_zero(size, __func__))
+    if (is_size_less_or_zero(size, __func__))
     {
         return NULL;
     }
@@ -1482,7 +1482,7 @@ string_array_t *str_alloc_c_str_split(const char *data, const char *separator, i
 
 string_array_t *str_array_alloc_read_keyboard(int64_t size, ...)
 {
-    if (is_size_less_zero(size, __func__))
+    if (is_size_less_or_zero(size, __func__))
     {
         return NULL;
     }
