@@ -10,7 +10,7 @@
 #include <stdarg.h>
 #include "../C_Allocation_Metrics/allocation_metrics.h"
 
-#define STR_MAX_CHARS           1000000
+#define STR_MAX_CHARS           100000
 
 typedef struct string string_t;
 typedef struct string_array string_array_t;
