@@ -15,21 +15,15 @@
 typedef struct string string_t;
 typedef struct string_array string_array_t;
 
-int64_t str_get_size(string_t *str);
-int64_t str_get_capacity(string_t *str);
-char *str_get_literal(string_t *str);
 /*
 void str_set_size(string_t *str, int64_t size);
 void str_set_capacity(string_t *str, int64_t capacity);
 void str_set_literal(string_t *str, char *data);
 */
 
-int64_t str_array_get_size(string_array_t *str_array);
-string_t *str_array_get_index(string_array_t *str_array, int64_t index);
-/*
-void sa_set_size(string_array_t *str_array, int64_t size);
-void sa_set_index(string_array_t *str_array, int64_t index, string_t *str);
-*/
+int64_t str_get_size(string_t *str);
+int64_t str_get_capacity(string_t *str);
+char *str_get_literal(string_t *str);
 
 string_t *str_alloc(const char *data);
 string_t *str_alloc_va(int64_t size, ...);
@@ -53,10 +47,6 @@ void str_lstrip(string_t *str, const char *characters);
 void str_rstrip(string_t *str, const char *characters);
 void str_strip(string_t *str);
 void str_strip_chars(string_t *str, const char *characters);
-string_array_t *str_alloc_split(string_t *str, const char *separator, int64_t max_split);
-string_array_t *str_alloc_cstr_split(const char *data, const char *separator, int64_t max_split);
-bool str_array_cmp_str(string_t *str, string_array_t *str_array, int64_t index);
-bool str_array_cmp_c_str(const char *data, string_array_t *str_array, int64_t index);
 void str_upper(string_t *str);
 void str_lower(string_t *str);
 void str_swapcase(string_t *str);
@@ -77,9 +67,24 @@ string_t *str_alloc_ll_to_str(int64_t number);
 char *c_str_alloc(const char *data);
 string_t *str_alloc_copy(string_t *str);
 void str_print(string_t *str, const char *beginning, const char *end);
-void str_array_print(string_array_t *str_array, const char *beginning, const char *end);
 void c_str_free(char **curr);
 void str_free(string_t **str);
+
+/*
+void sa_set_size(string_array_t *str_array, int64_t size);
+void sa_set_index(string_array_t *str_array, int64_t index, string_t *str);
+*/
+void str_array_set_index(string_array_t *str_array, int64_t index, string_t *input);
+int64_t str_array_get_size(string_array_t *str_array);
+string_t *str_array_get_index(string_array_t *str_array, int64_t index);
+
+string_array_t *str_array_alloc(int64_t size);
+string_array_t *str_alloc_split(string_t *str, const char *separator, int64_t max_split);
+string_array_t *str_alloc_cstr_split(const char *data, const char *separator, int64_t max_split);
+string_array_t *str_array_alloc_read_keyboard(int64_t size, ...);
+bool str_array_cmp_str(string_t *str, string_array_t *str_array, int64_t index);
+bool str_array_cmp_c_str(const char *data, string_array_t *str_array, int64_t index);
+void str_array_print(string_array_t *str_array, const char *beginning, const char *end);
 void str_array_free(string_array_t **str_array);
 
 #endif /* DSTRING_H */

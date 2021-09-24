@@ -133,7 +133,7 @@ static bool check_index(int64_t *index, int64_t size, const char *function_name)
 
     if (*index < 0 || *index >= size)
     {
-        printf("%s: %swarning:%s index is out of range%s\n", function_name, PURPLE, WHITE, RESET);
+        printf("%s: %swarning:%s index %lld is out of range%s\n", function_name, PURPLE, WHITE, *index, RESET);
         return true;
     }
 
@@ -552,55 +552,6 @@ void str_set_literal(string_t *str, char *data)
 }
 */
 
-int64_t str_array_get_size(string_array_t *str_array)
-{
-    if (is_string_array_null(str_array, __func__))
-    {
-        return -1;
-    }
-
-    return str_array->size;
-}
-
-string_t *str_array_get_index(string_array_t *str_array, int64_t index)
-{
-    if (is_string_array_null(str_array, __func__)
-        || check_index(&index, str_array->size, __func__))
-    {
-        return NULL;
-    }
-
-    return str_array->data_set[index];
-}
-
-/*
-void sa_set_size(string_array_t *str_array, int64_t size)
-{
-    if (str_array == NULL)
-    {
-        printf("%s: %swarning:%s string_array is NULL%s\n", __func__, PURPLE, WHITE, RESET);
-        return;
-    }
-
-    str_array->size = size;
-}
-
-void sa_set_index(string_array_t *str_array, int64_t index, string_t *str)
-{
-    if (check_index(&index, str_array->size, __func__))
-    {
-        return;
-    }
-    else if (str_array == NULL)
-    {
-        printf("%s: %swarning:%s string_array is NULL%s\n", __func__, PURPLE, WHITE, RESET);
-        return;
-    }
-
-    str_array->data_set[index] = str;
-}
-*/
-
 string_t *str_alloc(const char *data)
 {
     if (is_str_null(data, __func__))
@@ -1012,52 +963,6 @@ void str_strip_chars(string_t *str, const char *characters)
     str_rstrip(str, characters);
 }
 
-string_array_t *str_alloc_split(string_t *str, const char *separator, int64_t max_split)
-{
-    if (check_warnings(str, STR_NULL, __func__)
-        || is_not_valid_str(separator, __func__))
-    {
-        return NULL;
-    }
-
-    return split_str(str->data, str->size, separator, max_split);
-}
-
-string_array_t *str_alloc_cstr_split(const char *data, const char *separator, int64_t max_split)
-{
-    if (is_not_valid_str(data, __func__)
-        || is_not_valid_str(separator, __func__))
-    {
-        return NULL;
-    }
-
-    return split_str(data, (int64_t)strlen(data), separator, max_split);
-}
-
-bool str_array_cmp_str(string_t *str, string_array_t *str_array, int64_t index)
-{
-    if (check_warnings(str, STR_NULL, __func__)
-        || is_string_array_null(str_array, __func__)
-        || check_index(&index, str_array->size, __func__))
-    {
-        return false;
-    }
-
-    return !(strcmp(str->data, (str_array->data_set[index]->data)));
-}
-
-bool str_array_cmp_c_str(const char *data, string_array_t *str_array, int64_t index)
-{
-    if (is_str_null(data, __func__)
-        || is_string_array_null(str_array, __func__)
-        || check_index(&index, str_array->size, __func__))
-    {
-        return false;
-    }
-
-    return !(strcmp(data, (str_array->data_set[index]->data)));
-}
-
 void str_upper(string_t *str)
 {
     if (check_warnings(str, STR_NULL, __func__))
@@ -1377,28 +1282,6 @@ void str_print(string_t *str, const char *beginning, const char *end)
     printf("%s%s%s", beginning, str->data, end);
 }
 
-void str_array_print(string_array_t *str_array, const char *beginning, const char *end)
-{
-    if (is_string_array_null(str_array, __func__)
-        || is_str_null(beginning, __func__)
-        || is_str_null(end, __func__))
-    {
-        return;
-    }
-
-    int64_t i;
-    int64_t last_index = (str_array->size-1);
-
-    printf("%s{", beginning);
-
-    for (i = 0; i < last_index; i++)
-    {
-        printf("\"%s\", ", str_array->data_set[i]->data);
-    }
-
-    printf("\"%s\"}%s", str_array->data_set[i]->data, end);
-}
-
 void c_str_free(char **data)
 {
     if (is_pointer_null(data, __func__) || 
@@ -1422,6 +1305,167 @@ void str_free(string_t **str)
     str_data_free(*str);
     free_mem(*str, sizeof(string_t));
     *str = NULL;
+}
+
+
+/*
+void sa_set_size(string_array_t *str_array, int64_t size)
+{
+    if (str_array == NULL)
+    {
+        printf("%s: %swarning:%s string_array is NULL%s\n", __func__, PURPLE, WHITE, RESET);
+        return;
+    }
+
+    str_array->size = size;
+}
+
+void sa_set_index(string_array_t *str_array, int64_t index, string_t *str)
+{
+    if (check_index(&index, str_array->size, __func__))
+    {
+        return;
+    }
+    else if (str_array == NULL)
+    {
+        printf("%s: %swarning:%s string_array is NULL%s\n", __func__, PURPLE, WHITE, RESET);
+        return;
+    }
+
+    str_array->data_set[index] = str;
+}
+*/
+
+void str_array_set_index(string_array_t *str_array, int64_t index, string_t *input)
+{
+    if (is_string_array_null(str_array, __func__)
+        || check_index(&index, str_array->size, __func__)
+        || check_warnings(input, STR_NULL, __func__))
+    {
+        return;
+    }
+
+    str_array->data_set[index] = input;
+}
+
+int64_t str_array_get_size(string_array_t *str_array)
+{
+    if (is_string_array_null(str_array, __func__))
+    {
+        return -1;
+    }
+
+    return str_array->size;
+}
+
+string_t *str_array_get_index(string_array_t *str_array, int64_t index)
+{
+    if (is_string_array_null(str_array, __func__)
+        || check_index(&index, str_array->size, __func__))
+    {
+        return NULL;
+    }
+
+    return str_array->data_set[index];
+}
+
+string_array_t *str_array_alloc(int64_t size)
+{
+    string_array_t *str_array = alloc_mem(sizeof(string_array_t));
+    str_array->size = size;
+    str_array->data_set = alloc_mem((size_t)str_array->size * sizeof(string_t*));
+
+    for (int64_t i = 0; i < size; i++)
+    {
+        str_array->data_set[i] = NULL;
+    }
+
+    return str_array;
+}
+
+string_array_t *str_alloc_split(string_t *str, const char *separator, int64_t max_split)
+{
+    if (check_warnings(str, STR_NULL, __func__)
+        || is_not_valid_str(separator, __func__))
+    {
+        return NULL;
+    }
+
+    return split_str(str->data, str->size, separator, max_split);
+}
+
+string_array_t *str_alloc_cstr_split(const char *data, const char *separator, int64_t max_split)
+{
+    if (is_not_valid_str(data, __func__)
+        || is_not_valid_str(separator, __func__))
+    {
+        return NULL;
+    }
+
+    return split_str(data, (int64_t)strlen(data), separator, max_split);
+}
+
+string_array_t *str_array_alloc_read_keyboard(int64_t size, ...)
+{
+    string_array_t *str_array = str_array_alloc(size);
+
+    va_list args;
+    va_start(args, size);
+
+    for (int64_t i = 0; i < size; i++)
+    {
+        str_array_set_index(str_array, i, str_alloc_read_keyboard(va_arg(args, char*)));
+    }
+
+    va_end(args);
+
+    return str_array;
+}
+
+bool str_array_cmp_str(string_t *str, string_array_t *str_array, int64_t index)
+{
+    if (check_warnings(str, STR_NULL, __func__)
+        || is_string_array_null(str_array, __func__)
+        || check_index(&index, str_array->size, __func__))
+    {
+        return false;
+    }
+
+    return !(strcmp(str->data, (str_array->data_set[index]->data)));
+}
+
+bool str_array_cmp_c_str(const char *data, string_array_t *str_array, int64_t index)
+{
+    if (is_str_null(data, __func__)
+        || is_string_array_null(str_array, __func__)
+        || check_index(&index, str_array->size, __func__))
+    {
+        return false;
+    }
+
+    return !(strcmp(data, (str_array->data_set[index]->data)));
+}
+
+void str_array_print(string_array_t *str_array, const char *beginning, const char *end)
+{
+    if (is_string_array_null(str_array, __func__)
+        || is_str_null(beginning, __func__)
+        || is_str_null(end, __func__))
+    {
+        return;
+    }
+
+    int64_t i;
+    int64_t last_index = (str_array->size-1);
+
+    printf("%s{", beginning);
+
+    for (i = 0; i < last_index; i++)
+    {
+        printf("\"%s\", ", str_array->data_set[i]->data);
+    }
+
+    printf("\"%s\"}%s", str_array->data_set[i]->data, end);
 }
 
 void str_array_free(string_array_t **str_array)
