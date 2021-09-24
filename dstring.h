@@ -74,11 +74,14 @@ void str_free(string_t **str);
 void sa_set_size(string_array_t *str_array, int64_t size);
 void sa_set_index(string_array_t *str_array, int64_t index, string_t *str);
 */
-void str_array_set_index(string_array_t *str_array, int64_t index, string_t *input);
+void str_array_set_str(string_array_t *str_array, int64_t index, string_t *input);
+void str_array_set_c_str(string_array_t *str_array, int64_t index, const char *data);
 int64_t str_array_get_size(string_array_t *str_array);
 string_t *str_array_get_index(string_array_t *str_array, int64_t index);
 
 string_array_t *str_array_alloc(int64_t size);
+string_array_t *str_array_alloc_strs(int64_t size, ...);
+string_array_t *str_array_alloc_c_strs(int64_t size, ...);
 string_array_t *str_alloc_split(string_t *str, const char *separator, int64_t max_split);
 string_array_t *str_alloc_c_str_split(const char *data, const char *separator, int64_t max_split);
 string_array_t *str_array_alloc_read_keyboard(int64_t size, ...);

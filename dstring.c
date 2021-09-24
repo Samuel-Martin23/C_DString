@@ -1336,7 +1336,7 @@ void sa_set_index(string_array_t *str_array, int64_t index, string_t *str)
 }
 */
 
-void str_array_set_index(string_array_t *str_array, int64_t index, string_t *str)
+void str_array_set_str(string_array_t *str_array, int64_t index, string_t *str)
 {
     if (is_str_array_null(str_array, __func__)
         || check_index(&index, str_array->size, __func__)
@@ -1351,6 +1351,23 @@ void str_array_set_index(string_array_t *str_array, int64_t index, string_t *str
     }
 
     str_array->data_set[index] = str;
+}
+
+void str_array_set_c_str(string_array_t *str_array, int64_t index, const char *data)
+{
+    if (is_str_array_null(str_array, __func__)
+        || check_index(&index, str_array->size, __func__)
+        || is_c_str_null(data, __func__))
+    {
+        return;
+    }
+
+    if (str_array->data_set[index] != NULL)
+    {
+        str_free(&str_array->data_set[index]);
+    }
+
+    str_array->data_set[index] = str_alloc(data);
 }
 
 int64_t str_array_get_size(string_array_t *str_array)
@@ -1393,6 +1410,54 @@ string_array_t *str_array_alloc(int64_t size)
     return str_array;
 }
 
+string_array_t *str_array_alloc_strs(int64_t size, ...)
+{
+    if (is_size_less_zero(size, __func__))
+    {
+        return NULL;
+    }
+
+    string_array_t *str_array = alloc_mem(sizeof(string_array_t));
+    str_array->size = size;
+    str_array->data_set = alloc_mem((size_t)str_array->size * sizeof(string_t*));
+
+    va_list args;
+    va_start(args, size);
+
+    for (int64_t i = 0; i < size; i++)
+    {
+        str_array->data_set[i] = va_arg(args, string_t*);
+    }
+
+    va_end(args);
+
+    return str_array;
+}
+
+string_array_t *str_array_alloc_c_strs(int64_t size, ...)
+{
+    if (is_size_less_zero(size, __func__))
+    {
+        return NULL;
+    }
+
+    string_array_t *str_array = alloc_mem(sizeof(string_array_t));
+    str_array->size = size;
+    str_array->data_set = alloc_mem((size_t)str_array->size * sizeof(string_t*));
+
+    va_list args;
+    va_start(args, size);
+
+    for (int64_t i = 0; i < size; i++)
+    {
+        str_array->data_set[i] = str_alloc(va_arg(args, char*));
+    }
+
+    va_end(args);
+
+    return str_array;
+}
+
 string_array_t *str_alloc_split(string_t *str, const char *separator, int64_t max_split)
 {
     if (is_str_null(str, __func__)
@@ -1429,7 +1494,7 @@ string_array_t *str_array_alloc_read_keyboard(int64_t size, ...)
 
     for (int64_t i = 0; i < size; i++)
     {
-        str_array_set_index(str_array, i, str_alloc_read_keyboard(va_arg(args, char*)));
+        str_array_set_str(str_array, i, str_alloc_read_keyboard(va_arg(args, char*)));
     }
 
     va_end(args);
