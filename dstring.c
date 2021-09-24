@@ -1345,11 +1345,7 @@ void str_array_set(string_array_t *str_array, int64_t index, string_t *str)
         return;
     }
 
-    if (str_array->data_set[index] != NULL)
-    {
-        str_free(&str_array->data_set[index]);
-    }
-
+    str_free(&str_array->data_set[index]);
     str_array->data_set[index] = str;
 }
 
@@ -1362,11 +1358,7 @@ void str_array_set_c_str(string_array_t *str_array, int64_t index, const char *d
         return;
     }
 
-    if (str_array->data_set[index] != NULL)
-    {
-        str_free(&str_array->data_set[index]);
-    }
-
+    str_free(&str_array->data_set[index]);
     str_array->data_set[index] = str_alloc(data);
 }
 
@@ -1404,7 +1396,7 @@ string_array_t *str_array_alloc(int64_t size)
 
     for (int64_t i = 0; i < size; i++)
     {
-        str_array->data_set[i] = NULL;
+        str_array->data_set[i] = str_alloc("");
     }
 
     return str_array;
