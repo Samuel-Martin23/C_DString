@@ -1345,6 +1345,11 @@ void str_array_set_index(string_array_t *str_array, int64_t index, string_t *str
         return;
     }
 
+    if (str_array->data_set[index] != NULL)
+    {
+        str_free(&str_array->data_set[index]);
+    }
+
     str_array->data_set[index] = str;
 }
 
