@@ -1336,7 +1336,7 @@ void sa_set_index(string_array_t *str_array, int64_t index, string_t *str)
 }
 */
 
-void str_array_set_str(string_array_t *str_array, int64_t index, string_t *str)
+void str_array_set(string_array_t *str_array, int64_t index, string_t *str)
 {
     if (is_str_array_null(str_array, __func__)
         || check_index(&index, str_array->size, __func__)
@@ -1494,7 +1494,7 @@ string_array_t *str_array_alloc_read_keyboard(int64_t size, ...)
 
     for (int64_t i = 0; i < size; i++)
     {
-        str_array_set_str(str_array, i, str_alloc_read_keyboard(va_arg(args, char*)));
+        str_array_set(str_array, i, str_alloc_read_keyboard(va_arg(args, char*)));
     }
 
     va_end(args);
@@ -1502,7 +1502,7 @@ string_array_t *str_array_alloc_read_keyboard(int64_t size, ...)
     return str_array;
 }
 
-bool str_array_cmp_str(string_t *str, string_array_t *str_array, int64_t index)
+bool str_array_cmp(string_t *str, string_array_t *str_array, int64_t index)
 {
     if (is_str_null(str, __func__)
         || is_str_array_null(str_array, __func__)
