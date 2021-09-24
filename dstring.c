@@ -288,7 +288,7 @@ static int64_t count_occurrences_in_str(const char *data, const char *search_val
     return occurrences;
 }
 
-static string_t *read_content(FILE *fp)
+static string_t *alloc_read_file_content(FILE *fp)
 {
     char file_line[STR_MAX_CHARS];
     string_t *str = str_alloc("");
@@ -463,6 +463,17 @@ static int64_t str_realloc_capacity(string_t *str, const char *data)
 static void str_data_free(string_t *str)
 {
     free_mem(str->data, sizeof(char) * (size_t)(str->capacity + 1));
+}
+
+static string_t *alloc_setup_capacity(int64_t file_size)
+{
+    string_t *str = alloc_mem(sizeof(string_t));
+
+    str->size = file_size;
+    str->capacity = calculate_capacity(file_size);
+    str->data = alloc_mem(sizeof(char) * (size_t)(str->capacity + 1));
+
+    return str;
 }
 
 int64_t str_get_size(string_t *str)
@@ -1149,30 +1160,58 @@ string_t *str_alloc_read_keyboard(const char *output_message)
     return str;
 }
 
-string_t *str_alloc_read_file(const char *path)
+string_t *str_alloc_read_file(const char *path, const char *mode)
 {
     if (is_not_valid_str(path, __func__))
     {
         return NULL;
     }
 
-    FILE *fp = fopen(path, "r");
-    string_t *str = read_content(fp);
+    if (strstr(mode, "w") != NULL || strstr(mode, "a") != NULL)
+    {
+        printf("%s: %swarning:%s file can not be written%s\n", __func__, PURPLE, WHITE, RESET);
+        return NULL;
+    }
+
+    FILE *fp = fopen(path, mode);
+    string_t *str = NULL;
+
+    if (strstr(mode, "b"))
+    {
+        fseek(fp, 0, SEEK_END);
+        int64_t file_size = (int64_t)ftell(fp);
+        fseek(fp, 0, SEEK_SET);
+    
+        str = alloc_setup_capacity(file_size);
+
+        fread(str->data, (size_t)str->size + 1, 1, fp);
+    }
+    else
+    {
+        str = alloc_read_file_content(fp);
+    }
+
     fclose(fp);
 
     return str;
 }
 
-void str_write_file(string_t *str, const char *path, bool append_file)
+void str_write_file(string_t *str, const char *path, const char *mode)
 {
     if (check_warnings(str, STR_NULL, __func__)
-        || is_not_valid_str(path, __func__))
+        || is_not_valid_str(path, __func__)
+        || is_not_valid_str(mode, __func__))
     {
         return;
     }
 
-    const char *write_opt = append_file ? "a" : "w";
-    FILE *fp = fopen(path, write_opt);
+    if (strstr(mode, "r") != NULL || strstr(mode, "+") != NULL)
+    {
+        printf("%s: %swarning:%s file can not be read%s\n", __func__, PURPLE, WHITE, RESET);
+        return;
+    }
+
+    FILE *fp = fopen(path, mode);
 
     if (fp == NULL) 
     {
@@ -1180,7 +1219,15 @@ void str_write_file(string_t *str, const char *path, bool append_file)
         return;
     }
 
-    fprintf(fp, "%s", str->data);
+    if (strstr(mode, "b"))
+    {
+        fwrite(str->data, (size_t)str->size + 1, 1, fp);
+    }
+    else
+    {
+        fprintf(fp, "%s", str->data);
+    }
+
     fclose(fp);
 }
 
@@ -1192,7 +1239,7 @@ string_t *str_alloc_sys_output(const char *cmd)
     }
 
     FILE *fp = popen(cmd, "r");
-    string_t *str = read_content(fp);
+    string_t *str = alloc_read_file_content(fp);
     fclose(fp);
 
     return str;
