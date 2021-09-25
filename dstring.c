@@ -138,7 +138,6 @@ static bool check_ranges(int64_t *start, int64_t *end, int64_t size, const char 
     return false;
 }
 
-
 static char *strsep_m(char **data, const char *separator) 
 {
     if (*data == NULL)
@@ -465,34 +464,28 @@ static string_t *alloc_setup_capacity(int64_t file_size)
     return str;
 }
 
-int64_t str_get_size(string_t *str)
+int64_t c_str_input(char *input, const int64_t MAX_SIZE)
 {
-    if (is_str_null(str, __func__))
+    int64_t i = 0;
+    char ch = '\0';
+
+    while (true)
     {
-        return -1;
+        ch = (char)getchar();
+
+        if (ch == '\n' || ch == EOF)
+        {
+            break;
+        }
+        else if (i < (MAX_SIZE - 1))
+        {
+            input[i++] = ch;
+        }
     }
 
-    return str->size;
-}
+    input[i] = '\0';
 
-int64_t str_get_capacity(string_t *str)
-{
-    if (is_str_null(str, __func__))
-    {
-        return -1;
-    }
-
-    return str->capacity;
-}
-
-char *str_get_literal(string_t *str)
-{
-    if (is_str_null(str, __func__))
-    {
-        return NULL;
-    }
-
-    return str->data;
+    return i;
 }
 
 /*
@@ -540,6 +533,36 @@ void str_set_literal(string_t *str, char *data)
     str->data = data;
 }
 */
+
+int64_t str_get_size(string_t *str)
+{
+    if (is_str_null(str, __func__))
+    {
+        return -1;
+    }
+
+    return str->size;
+}
+
+int64_t str_get_capacity(string_t *str)
+{
+    if (is_str_null(str, __func__))
+    {
+        return -1;
+    }
+
+    return str->capacity;
+}
+
+char *str_get_literal(string_t *str)
+{
+    if (is_str_null(str, __func__))
+    {
+        return NULL;
+    }
+
+    return str->data;
+}
 
 string_t *str_alloc(const char *data)
 {
@@ -1047,15 +1070,10 @@ string_t *str_alloc_read_keyboard(const char *output_message)
 
     printf("%s", output_message);
 
-    int64_t input_size = 0;
     char input[STR_MAX_CHARS];
     string_t *str = alloc_mem(sizeof(string_t));
 
-    fgets(input, STR_MAX_CHARS, stdin);
-    input_size = (int64_t)(strlen(input) - 1);
-    input[input_size] = '\0';
-
-    str->size = input_size;
+    str->size = c_str_input(input, STR_MAX_CHARS);
     str->capacity = calculate_capacity(str->size);
     str->data = alloc_mem(sizeof(char) * (size_t)(str->capacity + 1));
 
@@ -1394,7 +1412,7 @@ string_array_t *str_array_alloc(int64_t size)
     str_array->size = size;
     str_array->data_set = alloc_mem((size_t)str_array->size * sizeof(string_t*));
 
-    for (int64_t i = 0; i < size; i++)
+    for (int64_t i = 0; i < str_array->size; i++)
     {
         str_array->data_set[i] = str_alloc("");
     }
@@ -1484,7 +1502,7 @@ string_array_t *str_array_alloc_read_keyboard(int64_t size, ...)
     va_list args;
     va_start(args, size);
 
-    for (int64_t i = 0; i < size; i++)
+    for (int64_t i = 0; i < str_array->size; i++)
     {
         str_array_set(str_array, i, str_alloc_read_keyboard(va_arg(args, char*)));
     }
