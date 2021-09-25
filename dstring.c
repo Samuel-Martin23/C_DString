@@ -464,7 +464,7 @@ static string_t *alloc_setup_capacity(int64_t file_size)
     return str;
 }
 
-int64_t c_str_input(char *input, const int64_t MAX_SIZE)
+int64_t input_c_str(char *input, const int64_t MAX_SIZE)
 {
     int64_t i = 0;
     char ch = '\0';
