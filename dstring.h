@@ -23,7 +23,6 @@ void str_set_size(string_t *str, int64_t size);
 void str_set_capacity(string_t *str, int64_t capacity);
 void str_set_literal(string_t *str, char *data);
 */
-
 int64_t str_get_size(string_t *str);
 int64_t str_get_capacity(string_t *str);
 char *str_get_literal(string_t *str);
