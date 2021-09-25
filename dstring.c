@@ -1089,7 +1089,7 @@ string_t *str_alloc_read_keyboard(const char *output_message)
     char input[STR_MAX_CHARS];
     string_t *str = alloc_mem(sizeof(string_t));
 
-    str->size = c_str_input(input, STR_MAX_CHARS);
+    str->size = input_c_str(input, STR_MAX_CHARS);
     str->capacity = calculate_capacity(str->size);
     str->data = alloc_mem(sizeof(char) * (size_t)(str->capacity + 1));
 
