@@ -488,6 +488,22 @@ int64_t c_str_input(char *input, const int64_t MAX_SIZE)
     return i;
 }
 
+int scanf_flush(const char *format, ...)
+{
+    va_list args;
+    int result = 0;
+
+    va_start(args, format);
+    result = vscanf(format, args);
+    va_end(args);
+
+    // Flushes the buffer.
+    char ch = '\0';
+    while ((ch = (char)getchar()) != '\n' && ch != EOF);
+
+    return result;
+}
+
 /*
 void str_set_size(string_t *str, int64_t size)
 {
