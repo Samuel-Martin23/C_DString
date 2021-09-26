@@ -15,7 +15,7 @@
 typedef struct string string_t;
 typedef struct string_array string_array_t;
 
-int64_t input_c_str(char *input, const int64_t MAX_SIZE);
+int64_t prompt(const char *output_message, char *input, const int64_t MAX_SIZE);
 int scanf_flush(const char *format, ...);
 
 /*

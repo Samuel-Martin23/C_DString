@@ -464,8 +464,15 @@ static string_t *alloc_setup_capacity(int64_t file_size)
     return str;
 }
 
-int64_t input_c_str(char *input, const int64_t MAX_SIZE)
-{
+int64_t prompt(const char *output_message, char *input, const int64_t MAX_SIZE)
+{   
+    if (is_size_less_or_zero(MAX_SIZE, __func__))
+    {
+        return -1;
+    }
+
+    printf("%s", output_message);
+
     int64_t i = 0;
     char ch = '\0';
 
@@ -1084,12 +1091,10 @@ string_t *str_alloc_read_keyboard(const char *output_message)
         return NULL;
     }
 
-    printf("%s", output_message);
-
     char input[STR_MAX_CHARS];
     string_t *str = alloc_mem(sizeof(string_t));
 
-    str->size = input_c_str(input, STR_MAX_CHARS);
+    str->size = prompt(output_message, input, STR_MAX_CHARS);
     str->capacity = calculate_capacity(str->size);
     str->data = alloc_mem(sizeof(char) * (size_t)(str->capacity + 1));
 
