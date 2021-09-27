@@ -474,11 +474,11 @@ int64_t prompt(const char *output_message, char *input, const int64_t MAX_SIZE)
     printf("%s", output_message);
 
     int64_t i = 0;
-    char ch = '\0';
+    int ch = 0;
 
     while (true)
     {
-        ch = (char)getchar();
+        ch = getchar();
 
         if (ch == '\n' || ch == EOF)
         {
@@ -486,7 +486,7 @@ int64_t prompt(const char *output_message, char *input, const int64_t MAX_SIZE)
         }
         else if (i < (MAX_SIZE - 1))
         {
-            input[i++] = ch;
+            input[i++] = (char)ch;
         }
     }
 
