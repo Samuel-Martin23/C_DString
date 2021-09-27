@@ -10,15 +10,19 @@
 #include <stdarg.h>
 #include "../C_Allocation_Metrics/allocation_metrics.h"
 
-#define STR_MAX_CHARS           100000
-
 typedef struct dstr dstr_t;
 typedef struct dstr_arr dstr_arr_t;
 
 int64_t prompt(const char *output_message, char *input, const int64_t MAX_SIZE);
 /*
 int scanf_flush(const char *format, ...);
+*/
 
+char *str_alloc(const char *data);
+int64_t str_ascii_total(const char *data);
+void str_free(char **curr);
+
+/*
 void dstr_set_size(dstr_t *str, int64_t size);
 void dstr_set_capacity(dstr_t *str, int64_t capacity);
 void dstr_set_literal(dstr_t *str, char *data);
@@ -59,17 +63,14 @@ dstr_t *dstr_alloc_read_file(const char *path, const char *mode);
 void dstr_write_file(dstr_t *dstr, const char *path, const char *mode);
 dstr_t *dstr_alloc_sys_output(const char *cmd);
 int64_t dstr_ascii_total(dstr_t *dstr);
-int64_t str_ascii_total(const char *data);
 int64_t dstr_ll(dstr_t *dstr);
 double dstr_double(dstr_t *dstr);
 dstr_t *dstr_alloc_ll_to_dstr(int64_t number);
 dstr_t *dstr_alloc_ll_to_binary_dstr(int64_t number, int64_t bits_shown);
 dstr_t *dstr_alloc_str_to_binary_dstr(const char *number, int64_t bits_shown);
 dstr_t *dstr_alloc_dstr_to_binary_dstr(dstr_t *dstr, int64_t bits_shown);
-char *str_alloc(const char *data);
 dstr_t *dstr_alloc_copy(dstr_t *dstr);
 void dstr_print(dstr_t *dstr, const char *beginning, const char *end);
-void str_free(char **curr);
 void dstr_free(dstr_t **dstr);
 
 /*

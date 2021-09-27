@@ -6,6 +6,7 @@
 #define RESET                       "\033[0m"
 
 #define DEFAULT_CAPACITY            32
+#define STR_MAX_CHARS               100000
 
 typedef struct dstr
 {
@@ -511,7 +512,50 @@ int scanf_flush(const char *format, ...)
 
     return result;
 }
+*/
 
+char *str_alloc(const char *data)
+{
+    if (is_str_null(data, __func__))
+    {
+        return NULL;
+    }
+
+    mem_usage.allocated += sizeof(char) * (strlen(data) + 1);
+    return strdup(data);
+}
+
+int64_t str_ascii_total(const char *data)
+{
+    if (is_not_valid_str(data, __func__))
+    {
+        return -1;
+    }
+
+    int64_t ascii_total = 0;
+
+    while (*data != '\0')
+    {
+        ascii_total += *data;
+        data++;
+    }
+
+    return ascii_total;
+}
+
+void str_free(char **data)
+{
+    if (is_pointer_null(data, __func__) || 
+        is_str_null(*data, __func__))
+    {
+        return;
+    }
+
+    free_mem(*data, sizeof(char) * (strlen(*data)+1));
+    *data = NULL;
+}
+
+/*
 void dstr_set_size(dstr_t *dstr, int64_t size)
 {
     if (check_warnings(str, STR_NULL, __func__))
@@ -1198,24 +1242,6 @@ int64_t dstr_ascii_total(dstr_t *dstr)
     return str_ascii_total(dstr->data);
 }
 
-int64_t str_ascii_total(const char *data)
-{
-    if (is_not_valid_str(data, __func__))
-    {
-        return -1;
-    }
-
-    int64_t ascii_total = 0;
-
-    while (*data != '\0')
-    {
-        ascii_total += *data;
-        data++;
-    }
-
-    return ascii_total;
-}
-
 int64_t dstr_ll(dstr_t *dstr)
 {
     if (is_dstr_null(dstr, __func__))
@@ -1292,17 +1318,6 @@ dstr_t *dstr_alloc_dstr_to_binary_dstr(dstr_t *dstr, int64_t bits_shown)
     return dstr_alloc_ll_to_binary_dstr(dstr_ll(dstr), bits_shown);
 }
 
-char *str_alloc(const char *data)
-{
-    if (is_str_null(data, __func__))
-    {
-        return NULL;
-    }
-
-    mem_usage.allocated += sizeof(char) * (strlen(data) + 1);
-    return strdup(data);
-}
-
 dstr_t *dstr_alloc_copy(dstr_t *dstr)
 {
     if (is_dstr_null(dstr, __func__))
@@ -1323,18 +1338,6 @@ void dstr_print(dstr_t *dstr, const char *beginning, const char *end)
     }
 
     printf("%s%s%s", beginning, dstr->data, end);
-}
-
-void str_free(char **data)
-{
-    if (is_pointer_null(data, __func__) || 
-        is_str_null(*data, __func__))
-    {
-        return;
-    }
-
-    free_mem(*data, sizeof(char) * (strlen(*data)+1));
-    *data = NULL;
 }
 
 void dstr_free(dstr_t **dstr)
