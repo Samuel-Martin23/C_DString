@@ -2,19 +2,18 @@
 
 int main()
 {
-    string_t *full_name = str_alloc( "  \nSamuel\n  ");
-    str_strip(full_name);
-    str_append(full_name, " Martin");
+    dstr_t *full_name = dstr_alloc( "  \nSamuel\n  ");
+    dstr_strip(full_name);
+    dstr_append(full_name, " Martin");
 
     int64_t start = 7;
-    string_t *last_name = str_alloc_substr(full_name, &start, 0, 0);
+    dstr_t *last_name = dstr_alloc_subdstr(full_name, &start, 0, 0);
 
-    str_erase(full_name, "tin");
-    string_array_t *split_name = str_alloc_split(full_name, "a", 0);
+    dstr_erase(full_name, "tin");
+    dstr_arr_t *split_name = dstr_alloc_split_dstr(full_name, "a", 0);
 
-    str_free(&last_name);
-    str_free(&full_name);
-    str_array_free(&split_name);
-
+    dstr_free(&last_name);
+    dstr_free(&full_name);
+    dstr_arr_free(&split_name);
     return 0;
 }

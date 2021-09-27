@@ -7,31 +7,31 @@
 
 #define DEFAULT_CAPACITY            32
 
-typedef struct string
+typedef struct dstr
 {
     int64_t size;
     int64_t capacity;
     char *data;
-} string_t;
+} dstr_t;
 
-typedef struct string_array
+typedef struct dstr_arr
 {
     int64_t size;
-    string_t **data_set;
-} string_array_t;
+    dstr_t **data_set;
+} dstr_arr_t;
 
-static bool is_str_null(string_t *str, const char *function_name)
+static bool is_dstr_null(dstr_t *dstr, const char *function_name)
 {
-    if (str == NULL)
+    if (dstr == NULL)
     {
-        printf("%s: %swarning:%s string is NULL%s\n", function_name, PURPLE, WHITE, RESET);
+        printf("%s: %swarning:%s dstring is NULL%s\n", function_name, PURPLE, WHITE, RESET);
         return true;
     }
 
     return false;
 }
 
-static bool is_c_str_null(const char *data, const char *func_name)
+static bool is_str_null(const char *data, const char *func_name)
 {
     bool is_null = (data == NULL);
 
@@ -43,7 +43,7 @@ static bool is_c_str_null(const char *data, const char *func_name)
     return is_null;
 }
 
-static bool is_not_valid_c_str(const char *data, const char *func_name)
+static bool is_not_valid_str(const char *data, const char *func_name)
 {
     bool is_valid_str = ((data != NULL) && (data[0] != '\0'));
 
@@ -55,13 +55,13 @@ static bool is_not_valid_c_str(const char *data, const char *func_name)
     return !(is_valid_str);
 }
 
-static bool is_str_array_null(string_array_t *str_array, const char *func_name)
+static bool is_dstr_arr_null(dstr_arr_t *dstr_array, const char *func_name)
 {
-    bool is_null = (str_array == NULL);
+    bool is_null = (dstr_array == NULL);
 
     if (is_null)
     {
-        printf("%s: %swarning:%s string_array is NULL%s\n", func_name, PURPLE, WHITE, RESET);
+        printf("%s: %swarning:%s dstring_array is NULL%s\n", func_name, PURPLE, WHITE, RESET);
     }
 
     return is_null;
@@ -277,10 +277,10 @@ static int64_t count_occurrences_in_str(const char *data, const char *search_val
     return occurrences;
 }
 
-static string_t *alloc_read_file_content(FILE *fp)
+static dstr_t *alloc_read_file_content(FILE *fp)
 {
     char file_line[STR_MAX_CHARS];
-    string_t *str = str_alloc("");
+    dstr_t *dstr = dstr_alloc("");
 
     if (fp == NULL) 
     {
@@ -292,14 +292,14 @@ static string_t *alloc_read_file_content(FILE *fp)
     {
         if (fgets(file_line, STR_MAX_CHARS, fp) != NULL)
         {
-            str_append(str, file_line);
+            dstr_append(dstr, file_line);
         }
     }
 
-    return str;
+    return dstr;
 }
 
-static string_array_t *alloc_split_str(const char *data, int64_t size, const char *separator, int64_t max_split)
+static dstr_arr_t *alloc_split_str(const char *data, int64_t size, const char *separator, int64_t max_split)
 {
     int64_t i = 0;
     char *split = NULL;
@@ -309,21 +309,21 @@ static string_array_t *alloc_split_str(const char *data, int64_t size, const cha
 
     mem_usage.allocated += sizeof(char) * (size_t)(size + 1);
 
-    string_array_t *str_array = alloc_mem(sizeof(string_array_t));
-    str_array->size = num_of_occurrences + 1;
-    str_array->data_set = alloc_mem((size_t)str_array->size * sizeof(string_t*));
+    dstr_arr_t *dstr_array = alloc_mem(sizeof(dstr_arr_t));
+    dstr_array->size = num_of_occurrences + 1;
+    dstr_array->data_set = alloc_mem((size_t)dstr_array->size * sizeof(dstr_t*));
 
     while (i < num_of_occurrences)
     {
         split = strsep_m(&data_copy, separator);
-        str_array->data_set[i] = str_alloc(split);
+        dstr_array->data_set[i] = dstr_alloc(split);
         i++;
     }
 
-    str_array->data_set[i] = str_alloc(data_copy);
+    dstr_array->data_set[i] = dstr_alloc(data_copy);
     free_mem(data_alloc, sizeof(char) * (size_t)(size + 1));
 
-    return str_array;
+    return dstr_array;
 }
 
 static int64_t update_capacity(int64_t size, int64_t capacity)
@@ -341,15 +341,15 @@ static int64_t calculate_capacity(int64_t size)
     return update_capacity(size, DEFAULT_CAPACITY);
 }
 
-static void set_empty_str(string_t *str)
+static void set_empty_dstr(dstr_t *dstr)
 {
-    str->size = 0;
-    str->capacity = DEFAULT_CAPACITY;
-    str->data = alloc_mem(sizeof(char) * (size_t)(str->capacity + 1));
-    str->data[0] = '\0';
+    dstr->size = 0;
+    dstr->capacity = DEFAULT_CAPACITY;
+    dstr->data = alloc_mem(sizeof(char) * (size_t)(dstr->capacity + 1));
+    dstr->data[0] = '\0';
 }
 
-static string_t *alloc_substr(const char *data, int64_t data_size, int64_t *start_opt, int64_t *end_opt, int64_t *step_opt, const char *function_name)
+static dstr_t *alloc_substr(const char *data, int64_t data_size, int64_t *start_opt, int64_t *end_opt, int64_t *step_opt, const char *function_name)
 {
     if (is_size_less_or_zero(data_size, __func__))
     {
@@ -376,29 +376,29 @@ static string_t *alloc_substr(const char *data, int64_t data_size, int64_t *star
     int64_t start = get_start_index(start_opt, data_size, is_step_neg);
     int64_t end = get_end_index(end_opt, data_size, is_step_neg);
     int64_t size = get_sub_size(start, end, is_step_neg);
-    string_t *sub_str = alloc_mem(sizeof(string_t));
+    dstr_t *dsub_str = alloc_mem(sizeof(dstr_t));
 
     if (size == 0 || start >= data_size)
     {
-        set_empty_str(sub_str);
-        return sub_str;
+        set_empty_dstr(dsub_str);
+        return dsub_str;
     }
 
     int64_t abs_step = llabs(step);
 
-    sub_str->size = (abs_step >= size) ? 1 : ceil_ll(size, abs_step);
-    sub_str->capacity = calculate_capacity(sub_str->size);
-    sub_str->data = alloc_mem(sizeof(char) * (size_t)(sub_str->capacity + 1));
+    dsub_str->size = (abs_step >= size) ? 1 : ceil_ll(size, abs_step);
+    dsub_str->capacity = calculate_capacity(dsub_str->size);
+    dsub_str->data = alloc_mem(sizeof(char) * (size_t)(dsub_str->capacity + 1));
 
-    for (int64_t i = 0; i < sub_str->size; i++)
+    for (int64_t i = 0; i < dsub_str->size; i++)
     {
-        sub_str->data[i] = data[start];
+        dsub_str->data[i] = data[start];
         start += step;
     }
 
-    sub_str->data[sub_str->size] = '\0';
+    dsub_str->data[dsub_str->size] = '\0';
 
-    return sub_str;
+    return dsub_str;
 }
 
 static char *get_str_number(int8_t number)
@@ -430,38 +430,38 @@ static char *get_str_number(int8_t number)
     return "";
 }
 
-static int64_t str_realloc_capacity(string_t *str, const char *data)
+static int64_t str_realloc_capacity(dstr_t *dstr, const char *data)
 {
     int64_t old_capacity = 0;
     int64_t data_size = (int64_t)strlen(data);
-    str->size += data_size;
+    dstr->size += data_size;
 
-    if (str->size > str->capacity)
+    if (dstr->size > dstr->capacity)
     {
-        old_capacity = str->capacity;
-        str->capacity = update_capacity(str->size, str->capacity);
-        str->data = realloc(str->data, sizeof(char) * (size_t)(str->capacity + 1));
+        old_capacity = dstr->capacity;
+        dstr->capacity = update_capacity(dstr->size, dstr->capacity);
+        dstr->data = realloc(dstr->data, sizeof(char) * (size_t)(dstr->capacity + 1));
 
-        mem_usage.allocated += (u_int32_t)(sizeof(char) * (size_t)(str->capacity - old_capacity));
+        mem_usage.allocated += (u_int32_t)(sizeof(char) * (size_t)(dstr->capacity - old_capacity));
     }
 
     return data_size;
 }
 
-static void str_data_free(string_t *str)
+static void dstr_data_free(dstr_t *dstr)
 {
-    free_mem(str->data, sizeof(char) * (size_t)(str->capacity + 1));
+    free_mem(dstr->data, sizeof(char) * (size_t)(dstr->capacity + 1));
 }
 
-static string_t *alloc_setup_capacity(int64_t file_size)
+static dstr_t *alloc_setup_capacity(int64_t file_size)
 {
-    string_t *str = alloc_mem(sizeof(string_t));
+    dstr_t *dstr = alloc_mem(sizeof(dstr_t));
 
-    str->size = file_size;
-    str->capacity = calculate_capacity(file_size);
-    str->data = alloc_mem(sizeof(char) * (size_t)(str->capacity + 1));
+    dstr->size = file_size;
+    dstr->capacity = calculate_capacity(file_size);
+    dstr->data = alloc_mem(sizeof(char) * (size_t)(dstr->capacity + 1));
 
-    return str;
+    return dstr;
 }
 
 int64_t prompt(const char *output_message, char *input, const int64_t MAX_SIZE)
@@ -512,7 +512,7 @@ int scanf_flush(const char *format, ...)
     return result;
 }
 
-void str_set_size(string_t *str, int64_t size)
+void dstr_set_size(dstr_t *dstr, int64_t size)
 {
     if (check_warnings(str, STR_NULL, __func__))
     {
@@ -527,7 +527,7 @@ void str_set_size(string_t *str, int64_t size)
     str->size = size;
 }
 
-void str_set_capacity(string_t *str, int64_t capacity)
+void dstr_set_capacity(dstr_t *dstr, int64_t capacity)
 {
     if (check_warnings(str, STR_NULL, __func__))
     {
@@ -542,13 +542,13 @@ void str_set_capacity(string_t *str, int64_t capacity)
     str->capacity = capacity;
 }
 
-void str_set_literal(string_t *str, char *data)
+void dstr_set_literal(dstr_t *dstr, char *data)
 {
     if (check_warnings(str, STR_NULL, __func__))
     {
         return;
     }
-    else if (is_not_valid_c_str(data, __func__))
+    else if (is_not_valid_str(data, __func__))
     {
         return;
     }
@@ -557,55 +557,55 @@ void str_set_literal(string_t *str, char *data)
 }
 */
 
-int64_t str_get_size(string_t *str)
+int64_t dstr_get_size(dstr_t *dstr)
 {
-    if (is_str_null(str, __func__))
+    if (is_dstr_null(dstr, __func__))
     {
         return -1;
     }
 
-    return str->size;
+    return dstr->size;
 }
 
-int64_t str_get_capacity(string_t *str)
+int64_t dstr_get_capacity(dstr_t *dstr)
 {
-    if (is_str_null(str, __func__))
+    if (is_dstr_null(dstr, __func__))
     {
         return -1;
     }
 
-    return str->capacity;
+    return dstr->capacity;
 }
 
-char *str_get_literal(string_t *str)
+char *dstr_get_literal(dstr_t *dstr)
 {
-    if (is_str_null(str, __func__))
+    if (is_dstr_null(dstr, __func__))
     {
         return NULL;
     }
 
-    return str->data;
+    return dstr->data;
 }
 
-string_t *str_alloc(const char *data)
+dstr_t *dstr_alloc(const char *data)
 {
-    if (is_c_str_null(data, __func__))
+    if (is_str_null(data, __func__))
     {
         return NULL;
     }
 
-    string_t *str = alloc_mem(sizeof(string_t));
+    dstr_t *dstr = alloc_mem(sizeof(dstr_t));
 
-    str->size = (int64_t)strlen(data);
-    str->capacity = calculate_capacity(str->size);
-    str->data = alloc_mem(sizeof(char) * (size_t)(str->capacity + 1));
+    dstr->size = (int64_t)strlen(data);
+    dstr->capacity = calculate_capacity(dstr->size);
+    dstr->data = alloc_mem(sizeof(char) * (size_t)(dstr->capacity + 1));
 
-    memcpy(str->data, data, str->size + 1);
+    memcpy(dstr->data, data, dstr->size + 1);
 
-    return str;
+    return dstr;
 }
 
-string_t *str_alloc_va(int64_t size, ...)
+dstr_t *dstr_alloc_va(int64_t size, ...)
 {
     if (is_size_less_or_zero(size, __func__))
     {
@@ -615,34 +615,34 @@ string_t *str_alloc_va(int64_t size, ...)
     va_list args;
     va_start(args, size);
 
-    string_t *str = str_alloc(va_arg(args, char*));
+    dstr_t *dstr = dstr_alloc(va_arg(args, char*));
 
     for (int64_t i = 1; i < size; i++)
     {
-        str_append(str, va_arg(args, char*));
+        dstr_append(dstr, va_arg(args, char*));
     }
 
     va_end(args);
 
-    return str;
+    return dstr;
 }
 
-void str_append(string_t *str, const char *data)
+void dstr_append(dstr_t *dstr, const char *data)
 {
-    if (is_str_null(str, __func__)
-        || is_not_valid_c_str(data, __func__))
+    if (is_dstr_null(dstr, __func__)
+        || is_not_valid_str(data, __func__))
     {
         return;
     }
 
-    int64_t data_size = str_realloc_capacity(str, data);
+    int64_t data_size = str_realloc_capacity(dstr, data);
 
-    memcpy(&str->data[str->size - data_size], data, data_size + 1);
+    memcpy(&dstr->data[dstr->size - data_size], data, data_size + 1);
 }
 
-void str_append_va(string_t *str, int64_t size, ...)
+void dstr_append_va(dstr_t *dstr, int64_t size, ...)
 {
-    if (is_str_null(str, __func__))
+    if (is_dstr_null(dstr, __func__))
     {
         return;
     }
@@ -657,18 +657,18 @@ void str_append_va(string_t *str, int64_t size, ...)
 
     for (int64_t i = 0; i < size; i++)
     {
-        str_append(str, va_arg(args, char*));
+        dstr_append(dstr, va_arg(args, char*));
     }
 
     va_end(args);
 }
 
-string_t *str_add(string_t *curr_str, string_t *newest_str)
+dstr_t *dstr_add(dstr_t *curr_dstr, dstr_t *newest_dstr)
 {
-    return str_add_va(2, curr_str, newest_str);
+    return dstr_add_va(2, curr_dstr, newest_dstr);
 }
 
-string_t *str_add_va(int64_t size, ...)
+dstr_t *dstr_add_va(int64_t size, ...)
 {
     if (is_size_less_or_zero(size, __func__))
     {
@@ -678,35 +678,35 @@ string_t *str_add_va(int64_t size, ...)
     va_list args;
     va_start(args, size);
 
-    string_t *temp = NULL;
-    string_t *total_str = str_alloc_copy(va_arg(args, string_t*));
+    dstr_t *temp_dstr = NULL;
+    dstr_t *total_dstr = dstr_alloc_copy(va_arg(args, dstr_t*));
 
     for (int64_t i = 1; i < size; i++)
     {
-        temp = va_arg(args, string_t*);
+        temp_dstr = va_arg(args, dstr_t*);
 
-        if (temp == NULL)
+        if (temp_dstr == NULL)
         {
             va_end(args);
-            return total_str;
+            return total_dstr;
         }
 
-        str_append(total_str, temp->data);
+        dstr_append(total_dstr, temp_dstr->data);
     }
 
     va_end(args);
 
-    return total_str;
+    return total_dstr;
 }
 
-void str_add_equals(string_t *curr_str, string_t *newest_str)
+void dstr_add_equals(dstr_t *curr_dstr, dstr_t *newest_dstr)
 {
-    str_add_equals_va(curr_str, 1, newest_str);
+    dstr_add_equals_va(curr_dstr, 1, newest_dstr);
 }
 
-void str_add_equals_va(string_t *str, int64_t size, ...)
+void dstr_add_equals_va(dstr_t *dstr, int64_t size, ...)
 {
-    if (is_str_null(str, __func__))
+    if (is_dstr_null(dstr, __func__))
     {
         return;
     }
@@ -719,52 +719,41 @@ void str_add_equals_va(string_t *str, int64_t size, ...)
     va_list args;
     va_start(args, size);
 
-    string_t *temp = NULL;
+    dstr_t *temp_dstr = NULL;
 
     for (int64_t i = 0; i < size; i++)
     {
-        temp = va_arg(args, string_t*);
+        temp_dstr = va_arg(args, dstr_t*);
 
-        if (temp == NULL)
+        if (temp_dstr == NULL)
         {
             va_end(args);
             return;
         }
 
-        str_append(str, temp->data);
+        dstr_append(dstr, temp_dstr->data);
     }
 
     va_end(args);
 }
 
-void str_before(string_t *str, const char *data)
+void dstr_before(dstr_t *dstr, const char *data)
 {
-    if (is_str_null(str, __func__)
-        || is_not_valid_c_str(data, __func__))
+    if (is_dstr_null(dstr, __func__)
+        || is_not_valid_str(data, __func__))
     {
         return;
     }
 
-    int64_t data_size = str_realloc_capacity(str, data);
+    int64_t data_size = str_realloc_capacity(dstr, data);
 
-    memcpy(&str->data[data_size], str->data, str->size+1);
-    memcpy(str->data, data, data_size);
+    memcpy(&dstr->data[data_size], dstr->data, dstr->size+1);
+    memcpy(dstr->data, data, data_size);
 }
 
-string_t *str_alloc_substr(string_t *str, int64_t *start_opt, int64_t *end_opt, int64_t *step_opt)
+dstr_t *dstr_alloc_substr(const char *data, int64_t *start_opt, int64_t *end_opt, int64_t *step_opt)
 {
-    if (is_str_null(str, __func__))
-    {
-        return NULL;
-    }
-
-    return alloc_substr(str->data, str->size, start_opt, end_opt, step_opt, __func__);
-}
-
-
-string_t *str_alloc_c_substr(const char *data, int64_t *start_opt, int64_t *end_opt, int64_t *step_opt)
-{
-    if (is_not_valid_c_str(data, __func__))
+    if (is_not_valid_str(data, __func__))
     {
         return NULL;
     }
@@ -772,28 +761,38 @@ string_t *str_alloc_c_substr(const char *data, int64_t *start_opt, int64_t *end_
     return alloc_substr(data, (int64_t)strlen(data), start_opt, end_opt, step_opt, __func__);
 }
 
-void str_replace(string_t *str, const char *old_c_str, const char *new_c_str)
+dstr_t *dstr_alloc_subdstr(dstr_t *dstr, int64_t *start_opt, int64_t *end_opt, int64_t *step_opt)
 {
-    if (is_str_null(str, __func__)
-        || is_c_str_null(old_c_str, __func__)
-        || is_c_str_null(new_c_str, __func__))
+    if (is_dstr_null(dstr, __func__))
     {
-        return;
+        return NULL;
     }
 
-    str_replace_count(str, old_c_str, new_c_str, 0);
+    return alloc_substr(dstr->data, dstr->size, start_opt, end_opt, step_opt, __func__);
 }
 
-void str_replace_count(string_t *str, const char *old_c_str, const char *new_c_str, int64_t count)
+void dstr_replace(dstr_t *dstr, const char *old_str, const char *new_str)
 {
-    if (is_str_null(str, __func__)
-        || is_c_str_null(old_c_str, __func__)
-        || is_c_str_null(new_c_str, __func__))
+    if (is_dstr_null(dstr, __func__)
+        || is_str_null(old_str, __func__)
+        || is_str_null(new_str, __func__))
     {
         return;
     }
 
-    int64_t num_of_occurrences = count_occurrences_in_str(str->data, old_c_str, count, 0, str->size);
+    dstr_replace_count(dstr, old_str, new_str, 0);
+}
+
+void dstr_replace_count(dstr_t *dstr, const char *old_str, const char *new_str, int64_t count)
+{
+    if (is_dstr_null(dstr, __func__)
+        || is_str_null(old_str, __func__)
+        || is_str_null(new_str, __func__))
+    {
+        return;
+    }
+
+    int64_t num_of_occurrences = count_occurrences_in_str(dstr->data, old_str, count, 0, dstr->size);
 
     if (num_of_occurrences == 0)
     {
@@ -803,23 +802,23 @@ void str_replace_count(string_t *str, const char *old_c_str, const char *new_c_s
 
     int64_t i = 0;
     int64_t num_of_replacements = 0;
-    int64_t old_c_str_size = (int64_t)strlen(old_c_str);
-    int64_t new_c_str_size = (int64_t)strlen(new_c_str);
-    int64_t total_size = ((str->size - (old_c_str_size  * num_of_occurrences)) + (new_c_str_size * num_of_occurrences));
+    int64_t old_str_size = (int64_t)strlen(old_str);
+    int64_t new_str_size = (int64_t)strlen(new_str);
+    int64_t total_size = ((dstr->size - (old_str_size  * num_of_occurrences)) + (new_str_size * num_of_occurrences));
 
     int64_t capacity = calculate_capacity(total_size);
 
-    char *copy = str->data;
+    char *copy = dstr->data;
     char *replacement = alloc_mem(sizeof(char) * (size_t)(capacity + 1));
 
     while (*copy != '\0')
     {
-        if (num_of_replacements < num_of_occurrences && strstr(copy, old_c_str) == copy)
+        if (num_of_replacements < num_of_occurrences && strstr(copy, old_str) == copy)
         {
-            memcpy(&replacement[i], new_c_str, new_c_str_size);
+            memcpy(&replacement[i], new_str, new_str_size);
             num_of_replacements++;
-            i += new_c_str_size;
-            copy += old_c_str_size;
+            i += new_str_size;
+            copy += old_str_size;
         }
         else
         {
@@ -829,284 +828,284 @@ void str_replace_count(string_t *str, const char *old_c_str, const char *new_c_s
 
     replacement[i] = '\0';
 
-    str_data_free(str);
+    dstr_data_free(dstr);
 
-    str->size = total_size;
-    str->capacity = capacity;
-    str->data = replacement;
+    dstr->size = total_size;
+    dstr->capacity = capacity;
+    dstr->data = replacement;
 }
 
-void str_erase(string_t *str, const char *data)
+void dstr_erase(dstr_t *dstr, const char *data)
 {
-    if (is_str_null(str, __func__)
-        || is_c_str_null(data, __func__))
+    if (is_dstr_null(dstr, __func__)
+        || is_str_null(data, __func__))
     {
         return;
     }
 
-    str_replace_count(str, data, "", 0);
+    dstr_replace_count(dstr, data, "", 0);
 }
 
-void str_erase_count(string_t *str, const char *data, int64_t count)
+void str_erase_count(dstr_t *dstr, const char *data, int64_t count)
 {
-    if (is_str_null(str, __func__)
-        || is_c_str_null(data, __func__))
+    if (is_dstr_null(dstr, __func__)
+        || is_str_null(data, __func__))
     {
         return;
     }
 
-    str_replace_count(str, data, "", count);
+    dstr_replace_count(dstr, data, "", count);
 }
 
-void str_erase_index(string_t *str, int64_t start, int64_t end)
+void dstr_erase_index(dstr_t *dstr, int64_t start, int64_t end)
 {
-    if (is_str_null(str, __func__)
-        || check_ranges(&start, &end, str->size, __func__))
+    if (is_dstr_null(dstr, __func__)
+        || check_ranges(&start, &end, dstr->size, __func__))
     {
         return;
     }
 
-    int64_t conjoin_data_size = str->size - (end - start);
+    int64_t conjoin_data_size = dstr->size - (end - start);
     int64_t capacity = calculate_capacity(conjoin_data_size);
     char *conjoin_data = alloc_mem(sizeof(char) * (size_t)(capacity + 1));
 
-    memcpy(conjoin_data, str->data, start);
-    memcpy(&conjoin_data[start], &str->data[end], (conjoin_data_size - start));
+    memcpy(conjoin_data, dstr->data, start);
+    memcpy(&conjoin_data[start], &dstr->data[end], (conjoin_data_size - start));
     conjoin_data[conjoin_data_size] = '\0';
 
-    str_data_free(str);
+    dstr_data_free(dstr);
 
-    str->data = conjoin_data;
-    str->size = conjoin_data_size;
-    str->capacity = capacity;
+    dstr->data = conjoin_data;
+    dstr->size = conjoin_data_size;
+    dstr->capacity = capacity;
 }
 
-int64_t str_find(string_t *str, const char *search_val)
+int64_t dstr_find(dstr_t *dstr, const char *search_val)
 {
-    if (is_str_null(str, __func__)
-        || is_not_valid_c_str(search_val, __func__))
+    if (is_dstr_null(dstr, __func__)
+        || is_not_valid_str(search_val, __func__))
     {
         return -1;
     }
 
-    char *found = strstr(str->data, search_val);
+    char *found = strstr(dstr->data, search_val);
 
-    return found ? (int64_t)(found - str->data) : -1;
+    return found ? (int64_t)(found - dstr->data) : -1;
 }
 
-int64_t str_count(string_t *str, const char *search_val, int64_t start, int64_t end)
+int64_t dstr_count(dstr_t *dstr, const char *search_val, int64_t start, int64_t end)
 {
-    if (is_str_null(str, __func__)
-        || is_not_valid_c_str(search_val, __func__) 
-        || check_ranges(&start, &end, str->size, __func__))
+    if (is_dstr_null(dstr, __func__)
+        || is_not_valid_str(search_val, __func__) 
+        || check_ranges(&start, &end, dstr->size, __func__))
     {
         return 0;
     }
 
-    return count_occurrences_in_str(str->data, search_val, 0, start, end);
+    return count_occurrences_in_str(dstr->data, search_val, 0, start, end);
 }
 
-void str_lstrip(string_t *str, const char *characters)
+void dstr_lstrip(dstr_t *dstr, const char *characters)
 {
-    if (is_str_null(str, __func__)
-        || is_not_valid_c_str(characters, __func__))
+    if (is_dstr_null(dstr, __func__)
+        || is_not_valid_str(characters, __func__))
     {
         return;
     }
 
-    char *copy = str->data;
+    char *copy = dstr->data;
 
     while (check_str_occurrences(characters, *copy))
     {
         copy++;
     }
 
-    if (copy == str->data)
+    if (copy == dstr->data)
     {
         return;
     }
     else if (*copy != '\0')
     {
-        int64_t striped_size = str->size - (copy - str->data);
+        int64_t striped_size = dstr->size - (copy - dstr->data);
         int64_t capacity = calculate_capacity(striped_size);
         char *striped = alloc_mem(sizeof(char) * (size_t)(capacity + 1));
 
         memcpy(striped, copy, striped_size + 1);
-        str_data_free(str);
+        dstr_data_free(dstr);
 
-        str->data = striped;
-        str->size = striped_size;
-        str->capacity = capacity;
+        dstr->data = striped;
+        dstr->size = striped_size;
+        dstr->capacity = capacity;
     }
     else
     {
-        str_data_free(str);
-        set_empty_str(str);
+        dstr_data_free(dstr);
+        set_empty_dstr(dstr);
     }
 }
 
-void str_rstrip(string_t *str, const char *characters)
+void dstr_rstrip(dstr_t *dstr, const char *characters)
 {
-    if (is_str_null(str, __func__)
-        || is_not_valid_c_str(characters, __func__))
+    if (is_dstr_null(dstr, __func__)
+        || is_not_valid_str(characters, __func__))
     {
         return;
     }
 
-    char *forward = str->data + str->size;
+    char *forward = dstr->data + dstr->size;
 
     while (check_str_occurrences(characters, (*(forward-1))))
     {
         forward--;
     }
 
-    if (forward == (str->data + str->size))
+    if (forward == (dstr->data + dstr->size))
     {
         return;
     }
-    else if (forward != str->data)
+    else if (forward != dstr->data)
     {
-        int64_t striped_size = forward - str->data;
+        int64_t striped_size = forward - dstr->data;
         int64_t capacity = calculate_capacity(striped_size);
         char *striped = alloc_mem(sizeof(char) * (size_t)(capacity + 1));
 
-        memcpy(striped, str->data, striped_size);
-        str_data_free(str);
+        memcpy(striped, dstr->data, striped_size);
+        dstr_data_free(dstr);
         striped[striped_size] = '\0';
 
-        str->data = striped;
-        str->size = striped_size;
-        str->capacity = capacity;
+        dstr->data = striped;
+        dstr->size = striped_size;
+        dstr->capacity = capacity;
     }
     else
     {
-        str_data_free(str);
-        set_empty_str(str);
+        dstr_data_free(dstr);
+        set_empty_dstr(dstr);
     }
 }
 
-void str_strip(string_t *str)
+void dstr_strip(dstr_t *dstr)
 {
-    if (is_str_null(str, __func__))
+    if (is_dstr_null(dstr, __func__))
     {
         return;
     }
 
-    str_lstrip(str, "\n ");
-    str_rstrip(str, "\n ");
+    dstr_lstrip(dstr, "\n ");
+    dstr_rstrip(dstr, "\n ");
 }
 
-void str_strip_chars(string_t *str, const char *characters)
+void dstr_strip_chars(dstr_t *dstr, const char *characters)
 {
-    if (is_str_null(str, __func__)
-        || is_not_valid_c_str(characters, __func__))
+    if (is_dstr_null(dstr, __func__)
+        || is_not_valid_str(characters, __func__))
     {
         return;
     }
 
-    str_lstrip(str, characters);
-    str_rstrip(str, characters);
+    dstr_lstrip(dstr, characters);
+    dstr_rstrip(dstr, characters);
 }
 
-void str_upper(string_t *str)
+void dstr_upper(dstr_t *dstr)
 {
-    if (is_str_null(str, __func__))
-    {
-        return;
-    }
-
-    int64_t i = 0;
-
-    while (str->data[i] != '\0')
-    {
-        str->data[i] = (char)toupper(str->data[i]);
-        i++;
-    }
-}
-
-void str_lower(string_t *str)
-{
-    if (is_str_null(str, __func__))
+    if (is_dstr_null(dstr, __func__))
     {
         return;
     }
 
     int64_t i = 0;
 
-    while (str->data[i] != '\0')
+    while (dstr->data[i] != '\0')
     {
-        str->data[i] = (char)tolower(str->data[i]);
+        dstr->data[i] = (char)toupper(dstr->data[i]);
         i++;
     }
 }
 
-void str_swapcase(string_t *str)
+void dstr_lower(dstr_t *dstr)
 {
-    if (is_str_null(str, __func__))
+    if (is_dstr_null(dstr, __func__))
     {
         return;
     }
 
     int64_t i = 0;
 
-    while (str->data[i] != '\0')
+    while (dstr->data[i] != '\0')
     {
-        str->data[i] = isupper(str->data[i]) ? (char)tolower(str->data[i]) : (char)toupper(str->data[i]);
+        dstr->data[i] = (char)tolower(dstr->data[i]);
         i++;
     }
 }
 
-void str_capitalize(string_t *str)
+void dstr_swapcase(dstr_t *dstr)
+{
+    if (is_dstr_null(dstr, __func__))
+    {
+        return;
+    }
+
+    int64_t i = 0;
+
+    while (dstr->data[i] != '\0')
+    {
+        dstr->data[i] = isupper(dstr->data[i]) ? (char)tolower(dstr->data[i]) : (char)toupper(dstr->data[i]);
+        i++;
+    }
+}
+
+void dstr_capitalize(dstr_t *dstr)
 {  
-    if (is_str_null(str, __func__))
+    if (is_dstr_null(dstr, __func__))
     {
         return;
     }
 
-    str->data[0] = (char)toupper(str->data[0]);
+    dstr->data[0] = (char)toupper(dstr->data[0]);
 }
 
-void str_title(string_t *str)
+void dstr_title(dstr_t *dstr)
 {
-    if (is_str_null(str, __func__))
+    if (is_dstr_null(dstr, __func__))
     {
         return;
     }
 
-    str_capitalize(str);
+    dstr_capitalize(dstr);
 
-    for (int64_t i = (str->size-1); i > 0; i--)
+    for (int64_t i = (dstr->size-1); i > 0; i--)
     {
-        if (!(isalpha(str->data[i-1])))
+        if (!(isalpha(dstr->data[i-1])))
         {
-            str->data[i] = (char)toupper(str->data[i]);
+            dstr->data[i] = (char)toupper(dstr->data[i]);
         }
     }
 }
 
-string_t *str_alloc_read_keyboard(const char *output_message)
+dstr_t *dstr_alloc_read_keyboard(const char *output_message)
 {
-    if (is_c_str_null(output_message, __func__))
+    if (is_str_null(output_message, __func__))
     {
         return NULL;
     }
 
     char input[STR_MAX_CHARS];
-    string_t *str = alloc_mem(sizeof(string_t));
+    dstr_t *dstr = alloc_mem(sizeof(dstr_t));
 
-    str->size = prompt(output_message, input, STR_MAX_CHARS);
-    str->capacity = calculate_capacity(str->size);
-    str->data = alloc_mem(sizeof(char) * (size_t)(str->capacity + 1));
+    dstr->size = prompt(output_message, input, STR_MAX_CHARS);
+    dstr->capacity = calculate_capacity(dstr->size);
+    dstr->data = alloc_mem(sizeof(char) * (size_t)(dstr->capacity + 1));
 
-    memcpy(str->data, input, str->size + 1);
+    memcpy(dstr->data, input, dstr->size + 1);
 
-    return str;
+    return dstr;
 }
 
-string_t *str_alloc_read_file(const char *path, const char *mode)
+dstr_t *dstr_alloc_read_file(const char *path, const char *mode)
 {
-    if (is_not_valid_c_str(path, __func__)
-        || is_not_valid_c_str(mode, __func__))
+    if (is_not_valid_str(path, __func__)
+        || is_not_valid_str(mode, __func__))
     {
         return NULL;
     }
@@ -1118,7 +1117,7 @@ string_t *str_alloc_read_file(const char *path, const char *mode)
     }
 
     FILE *fp = fopen(path, mode);
-    string_t *str = NULL;
+    dstr_t *dstr = NULL;
 
     if (strstr(mode, "b"))
     {
@@ -1126,25 +1125,25 @@ string_t *str_alloc_read_file(const char *path, const char *mode)
         int64_t file_size = (int64_t)ftell(fp);
         fseek(fp, 0, SEEK_SET);
     
-        str = alloc_setup_capacity(file_size);
+        dstr = alloc_setup_capacity(file_size);
 
-        fread(str->data, (size_t)str->size + 1, 1, fp);
+        fread(dstr->data, (size_t)dstr->size + 1, 1, fp);
     }
     else
     {
-        str = alloc_read_file_content(fp);
+        dstr = alloc_read_file_content(fp);
     }
 
     fclose(fp);
 
-    return str;
+    return dstr;
 }
 
-void str_write_file(string_t *str, const char *path, const char *mode)
+void str_write_file(dstr_t *dstr, const char *path, const char *mode)
 {
-    if (is_str_null(str, __func__)
-        || is_not_valid_c_str(path, __func__)
-        || is_not_valid_c_str(mode, __func__))
+    if (is_dstr_null(dstr, __func__)
+        || is_not_valid_str(path, __func__)
+        || is_not_valid_str(mode, __func__))
     {
         return;
     }
@@ -1165,38 +1164,43 @@ void str_write_file(string_t *str, const char *path, const char *mode)
 
     if (strstr(mode, "b"))
     {
-        fwrite(str->data, (size_t)str->size + 1, 1, fp);
+        fwrite(dstr->data, (size_t)dstr->size + 1, 1, fp);
     }
     else
     {
-        fprintf(fp, "%s", str->data);
+        fprintf(fp, "%s", dstr->data);
     }
 
     fclose(fp);
 }
 
-string_t *str_alloc_sys_output(const char *cmd)
+dstr_t *dstr_alloc_sys_output(const char *cmd)
 {
-    if (is_not_valid_c_str(cmd, __func__))
+    if (is_not_valid_str(cmd, __func__))
     {
         return NULL;
     }
 
     FILE *fp = popen(cmd, "r");
-    string_t *str = alloc_read_file_content(fp);
+    dstr_t *dstr = alloc_read_file_content(fp);
     fclose(fp);
 
-    return str;
+    return dstr;
 }
 
-int64_t str_ascii_total(string_t *str)
+int64_t dstr_ascii_total(dstr_t *dstr)
 {
-    return c_str_ascii_total(str->data);
+    if (is_dstr_null(dstr, __func__))
+    {
+        return -1;
+    }
+
+    return str_ascii_total(dstr->data);
 }
 
-int64_t c_str_ascii_total(const char *data)
+int64_t str_ascii_total(const char *data)
 {
-    if (is_not_valid_c_str(data, __func__))
+    if (is_not_valid_str(data, __func__))
     {
         return -1;
     }
@@ -1212,33 +1216,46 @@ int64_t c_str_ascii_total(const char *data)
     return ascii_total;
 }
 
-int64_t str_ll(string_t *str)
+int64_t dstr_ll(dstr_t *dstr)
 {
-    if (is_str_null(str, __func__))
+    if (is_dstr_null(dstr, __func__))
     {
         return -1;
     }
 
-    return atoll(str->data);
+    return atoll(dstr->data);
 }
 
-double str_double(string_t *str)
+double dstr_double(dstr_t *dstr)
 {
-    if (is_str_null(str, __func__))
+    if (is_dstr_null(dstr, __func__))
     {
         return -1.0;
     }
 
-    return atof(str->data);
+    return atof(dstr->data);
 }
 
-string_t *str_alloc_ll_to_binary_str(int64_t number, int64_t bits_shown)
+dstr_t *dstr_alloc_ll_to_dstr(int64_t number)
 {
-    string_t *bi_num = str_alloc("");
+    dstr_t *digits = dstr_alloc("");
 
     while (number > 0)
     {
-        str_before(bi_num, get_str_number(number % 2));
+        dstr_before(digits, get_str_number((number % 10)));
+        number /= 10;
+    }
+
+    return digits;
+}
+
+dstr_t *dstr_alloc_ll_to_binary_dstr(int64_t number, int64_t bits_shown)
+{
+    dstr_t *bi_num = dstr_alloc("");
+
+    while (number > 0)
+    {
+        dstr_before(bi_num, get_str_number(number % 2));
         number /= 2;
     }
 
@@ -1248,49 +1265,36 @@ string_t *str_alloc_ll_to_binary_str(int64_t number, int64_t bits_shown)
 
         for (int64_t i = 0; i < bits_shown; i++)
         {
-            str_before(bi_num, "0");
+            dstr_before(bi_num, "0");
         }
     }
 
     return bi_num;
 }
 
-string_t *str_alloc_c_str_to_binary_str(const char *number, int64_t bits_shown)
+dstr_t *dstr_alloc_str_to_binary_dstr(const char *number, int64_t bits_shown)
 {
-    if (is_not_valid_c_str(number, __func__))
+    if (is_not_valid_str(number, __func__))
     {
         return NULL;
     }
 
-    return str_alloc_ll_to_binary_str(atoll(number), bits_shown);
+    return dstr_alloc_ll_to_binary_dstr(atoll(number), bits_shown);
 }
 
-string_t *str_alloc_str_to_binary_str(string_t *str, int64_t bits_shown)
+dstr_t *dstr_alloc_dstr_to_binary_dstr(dstr_t *dstr, int64_t bits_shown)
 {
-    if (is_str_null(str, __func__))
+    if (is_dstr_null(dstr, __func__))
     {
         return NULL;
     }
 
-    return str_alloc_ll_to_binary_str(str_ll(str), bits_shown);
+    return dstr_alloc_ll_to_binary_dstr(dstr_ll(dstr), bits_shown);
 }
 
-string_t *str_alloc_ll_to_str(int64_t number)
+char *str_alloc(const char *data)
 {
-    string_t *digits = str_alloc("");
-
-    while (number > 0)
-    {
-        str_before(digits, get_str_number((number % 10)));
-        number /= 10;
-    }
-
-    return digits;
-}
-
-char *c_str_alloc(const char *data)
-{
-    if (is_c_str_null(data, __func__))
+    if (is_str_null(data, __func__))
     {
         return NULL;
     }
@@ -1299,32 +1303,32 @@ char *c_str_alloc(const char *data)
     return strdup(data);
 }
 
-string_t *str_alloc_copy(string_t *str)
+dstr_t *dstr_alloc_copy(dstr_t *dstr)
 {
-    if (is_str_null(str, __func__))
+    if (is_dstr_null(dstr, __func__))
     {
         return NULL;
     }
 
-    return str_alloc(str->data);
+    return dstr_alloc(dstr->data);
 }
 
-void str_print(string_t *str, const char *beginning, const char *end)
+void dstr_print(dstr_t *dstr, const char *beginning, const char *end)
 {
-    if (is_str_null(str, __func__)
-        || is_c_str_null(beginning, __func__)
-        || is_c_str_null(end, __func__))
+    if (is_dstr_null(dstr, __func__)
+        || is_str_null(beginning, __func__)
+        || is_str_null(end, __func__))
     {
         return;
     }
 
-    printf("%s%s%s", beginning, str->data, end);
+    printf("%s%s%s", beginning, dstr->data, end);
 }
 
-void c_str_free(char **data)
+void str_free(char **data)
 {
     if (is_pointer_null(data, __func__) || 
-        is_c_str_null(*data, __func__))
+        is_str_null(*data, __func__))
     {
         return;
     }
@@ -1333,22 +1337,22 @@ void c_str_free(char **data)
     *data = NULL;
 }
 
-void str_free(string_t **str)
+void dstr_free(dstr_t **dstr)
 {
-    if (is_pointer_null(str, __func__)
-        || is_str_null(*str, __func__))
+    if (is_pointer_null(dstr, __func__)
+        || is_dstr_null(*dstr, __func__))
     {
         return;
     }
 
-    str_data_free(*str);
-    free_mem(*str, sizeof(string_t));
-    *str = NULL;
+    dstr_data_free(*dstr);
+    free_mem(*dstr, sizeof(dstr_t));
+    *dstr = NULL;
 }
 
 
 /*
-void sa_set_size(string_array_t *str_array, int64_t size)
+void sa_set_size(dstr_arr_t *dstr_array, int64_t size)
 {
     if (str_array == NULL)
     {
@@ -1359,7 +1363,7 @@ void sa_set_size(string_array_t *str_array, int64_t size)
     str_array->size = size;
 }
 
-void sa_set_index(string_array_t *str_array, int64_t index, string_t *str)
+void sa_set_index(dstr_arr_t d*str_array, int64_t index, dstr_t *dstr)
 {
     if (check_index(&index, str_array->size, __func__))
     {
@@ -1375,135 +1379,124 @@ void sa_set_index(string_array_t *str_array, int64_t index, string_t *str)
 }
 */
 
-void str_array_set(string_array_t *str_array, int64_t index, string_t *str)
+void dstr_arr_set_dstr(dstr_arr_t *dstr_array, int64_t index, dstr_t *dstr_input)
 {
-    if (is_str_array_null(str_array, __func__)
-        || check_index(&index, str_array->size, __func__)
-        || is_str_null(str, __func__))
+    if (is_dstr_arr_null(dstr_array, __func__)
+        || check_index(&index, dstr_array->size, __func__)
+        || is_dstr_null(dstr_input, __func__))
     {
         return;
     }
 
-    str_free(&str_array->data_set[index]);
-    str_array->data_set[index] = str;
+    dstr_free(&dstr_array->data_set[index]);
+    dstr_array->data_set[index] = dstr_input;
 }
 
-void str_array_set_c_str(string_array_t *str_array, int64_t index, const char *data)
+void dstr_arr_set(dstr_arr_t *dstr_array, int64_t index, const char *data)
 {
-    if (is_str_array_null(str_array, __func__)
-        || check_index(&index, str_array->size, __func__)
-        || is_c_str_null(data, __func__))
+    if (is_dstr_arr_null(dstr_array, __func__)
+        || check_index(&index, dstr_array->size, __func__)
+        || is_str_null(data, __func__))
     {
         return;
     }
 
-    str_free(&str_array->data_set[index]);
-    str_array->data_set[index] = str_alloc(data);
+    dstr_free(&dstr_array->data_set[index]);
+    dstr_array->data_set[index] = dstr_alloc(data);
 }
 
-int64_t str_array_get_size(string_array_t *str_array)
+int64_t dstr_arr_get_size(dstr_arr_t *dstr_array)
 {
-    if (is_str_array_null(str_array, __func__))
+    if (is_dstr_arr_null(dstr_array, __func__))
     {
         return -1;
     }
 
-    return str_array->size;
+    return dstr_array->size;
 }
 
-string_t *str_array_get_index(string_array_t *str_array, int64_t index)
+dstr_t *dstr_arr_get_index(dstr_arr_t *dstr_array, int64_t index)
 {
-    if (is_str_array_null(str_array, __func__)
-        || check_index(&index, str_array->size, __func__))
+    if (is_dstr_arr_null(dstr_array, __func__)
+        || check_index(&index, dstr_array->size, __func__))
     {
         return NULL;
     }
 
-    return str_array->data_set[index];
+    return dstr_array->data_set[index];
 }
 
-string_array_t *str_array_alloc(int64_t size)
-{
-    if (is_size_less_or_zero(size, __func__))
-    {
-        return NULL;
-    }
-
-    string_array_t *str_array = alloc_mem(sizeof(string_array_t));
-    str_array->size = size;
-    str_array->data_set = alloc_mem((size_t)str_array->size * sizeof(string_t*));
-
-    for (int64_t i = 0; i < str_array->size; i++)
-    {
-        str_array->data_set[i] = str_alloc("");
-    }
-
-    return str_array;
-}
-
-string_array_t *str_array_alloc_strs(int64_t size, ...)
+dstr_arr_t *dstr_arr_alloc(int64_t size)
 {
     if (is_size_less_or_zero(size, __func__))
     {
         return NULL;
     }
 
-    string_array_t *str_array = alloc_mem(sizeof(string_array_t));
-    str_array->size = size;
-    str_array->data_set = alloc_mem((size_t)str_array->size * sizeof(string_t*));
+    dstr_arr_t *dstr_array = alloc_mem(sizeof(dstr_arr_t));
+    dstr_array->size = size;
+    dstr_array->data_set = alloc_mem((size_t)dstr_array->size * sizeof(dstr_t*));
+
+    for (int64_t i = 0; i < dstr_array->size; i++)
+    {
+        dstr_array->data_set[i] = dstr_alloc("");
+    }
+
+    return dstr_array;
+}
+
+dstr_arr_t *dstr_arr_alloc_strs(int64_t size, ...)
+{
+    if (is_size_less_or_zero(size, __func__))
+    {
+        return NULL;
+    }
+
+    dstr_arr_t *dstr_array = alloc_mem(sizeof(dstr_arr_t));
+    dstr_array->size = size;
+    dstr_array->data_set = alloc_mem((size_t)dstr_array->size * sizeof(dstr_t*));
 
     va_list args;
     va_start(args, size);
 
     for (int64_t i = 0; i < size; i++)
     {
-        str_array->data_set[i] = va_arg(args, string_t*);
+        dstr_array->data_set[i] = dstr_alloc(va_arg(args, char*));
     }
 
     va_end(args);
 
-    return str_array;
+    return dstr_array;
 }
 
-string_array_t *str_array_alloc_c_strs(int64_t size, ...)
+dstr_arr_t *dstr_arr_alloc_dstrs(int64_t size, ...)
 {
     if (is_size_less_or_zero(size, __func__))
     {
         return NULL;
     }
 
-    string_array_t *str_array = alloc_mem(sizeof(string_array_t));
-    str_array->size = size;
-    str_array->data_set = alloc_mem((size_t)str_array->size * sizeof(string_t*));
+    dstr_arr_t *dstr_array = alloc_mem(sizeof(dstr_arr_t));
+    dstr_array->size = size;
+    dstr_array->data_set = alloc_mem((size_t)dstr_array->size * sizeof(dstr_t*));
 
     va_list args;
     va_start(args, size);
 
     for (int64_t i = 0; i < size; i++)
     {
-        str_array->data_set[i] = str_alloc(va_arg(args, char*));
+        dstr_array->data_set[i] = va_arg(args, dstr_t*);
     }
 
     va_end(args);
 
-    return str_array;
+    return dstr_array;
 }
 
-string_array_t *str_alloc_split(string_t *str, const char *separator, int64_t max_split)
+dstr_arr_t *dstr_alloc_split_str(const char *data, const char *separator, int64_t max_split)
 {
-    if (is_str_null(str, __func__)
-        || is_not_valid_c_str(separator, __func__))
-    {
-        return NULL;
-    }
-
-    return alloc_split_str(str->data, str->size, separator, max_split);
-}
-
-string_array_t *str_alloc_c_str_split(const char *data, const char *separator, int64_t max_split)
-{
-    if (is_not_valid_c_str(data, __func__)
-        || is_not_valid_c_str(separator, __func__))
+    if (is_not_valid_str(data, __func__)
+        || is_not_valid_str(separator, __func__))
     {
         return NULL;
     }
@@ -1511,88 +1504,99 @@ string_array_t *str_alloc_c_str_split(const char *data, const char *separator, i
     return alloc_split_str(data, (int64_t)strlen(data), separator, max_split);
 }
 
-string_array_t *str_array_alloc_read_keyboard(int64_t size, ...)
+dstr_arr_t *dstr_alloc_split_dstr(dstr_t *dstr, const char *separator, int64_t max_split)
+{
+    if (is_dstr_null(dstr, __func__)
+        || is_not_valid_str(separator, __func__))
+    {
+        return NULL;
+    }
+
+    return alloc_split_str(dstr->data, dstr->size, separator, max_split);
+}
+
+dstr_arr_t *dstr_arr_alloc_read_keyboard(int64_t size, ...)
 {
     if (is_size_less_or_zero(size, __func__))
     {
         return NULL;
     }
 
-    string_array_t *str_array = str_array_alloc(size);
+    dstr_arr_t *dstr_array = dstr_arr_alloc(size);
 
     va_list args;
     va_start(args, size);
 
-    for (int64_t i = 0; i < str_array->size; i++)
+    for (int64_t i = 0; i < dstr_array->size; i++)
     {
-        str_array_set(str_array, i, str_alloc_read_keyboard(va_arg(args, char*)));
+        dstr_arr_set_dstr(dstr_array, i, dstr_alloc_read_keyboard(va_arg(args, char*)));
     }
 
     va_end(args);
 
-    return str_array;
+    return dstr_array;
 }
 
-bool str_array_cmp(string_array_t *str_array, int64_t index, string_t *str)
+bool dstr_arr_cmp(dstr_arr_t *dstr_array, int64_t index, const char *data)
 {
-    if (is_str_null(str, __func__)
-        || is_str_array_null(str_array, __func__)
-        || check_index(&index, str_array->size, __func__))
+    if (is_str_null(data, __func__)
+        || is_dstr_arr_null(dstr_array, __func__)
+        || check_index(&index, dstr_array->size, __func__))
     {
         return false;
     }
 
-    return !(strcmp(str->data, (str_array->data_set[index]->data)));
+    return !(strcmp(data, (dstr_array->data_set[index]->data)));
 }
 
-bool str_array_cmp_c_str(string_array_t *str_array, int64_t index, const char *data)
+bool dstr_arr_cmp_dstr(dstr_arr_t *dstr_array, int64_t index, dstr_t *dstr)
 {
-    if (is_c_str_null(data, __func__)
-        || is_str_array_null(str_array, __func__)
-        || check_index(&index, str_array->size, __func__))
+    if (is_dstr_null(dstr, __func__)
+        || is_dstr_arr_null(dstr_array, __func__)
+        || check_index(&index, dstr_array->size, __func__))
     {
         return false;
     }
 
-    return !(strcmp(data, (str_array->data_set[index]->data)));
+    return !(strcmp(dstr->data, (dstr_array->data_set[index]->data)));
 }
 
-void str_array_print(string_array_t *str_array, const char *beginning, const char *end)
+void dstr_arr_print(dstr_arr_t *dstr_array, const char *beginning, const char *end)
 {
-    if (is_str_array_null(str_array, __func__)
-        || is_c_str_null(beginning, __func__)
-        || is_c_str_null(end, __func__))
+    if (is_dstr_arr_null(dstr_array, __func__)
+        || is_str_null(beginning, __func__)
+        || is_str_null(end, __func__))
     {
         return;
     }
 
     int64_t i;
-    int64_t last_index = (str_array->size-1);
+    int64_t last_index = (dstr_array->size-1);
 
     printf("%s{", beginning);
 
     for (i = 0; i < last_index; i++)
     {
-        printf("\"%s\", ", str_array->data_set[i]->data);
+        printf("\"%s\", ", dstr_array->data_set[i]->data);
     }
 
-    printf("\"%s\"}%s", str_array->data_set[i]->data, end);
+    printf("\"%s\"}%s", dstr_array->data_set[i]->data, end);
 }
 
-void str_array_free(string_array_t **str_array)
+void dstr_arr_free(dstr_arr_t **dstr_array)
 {
-    if (is_pointer_null(str_array, __func__)
-        || is_str_array_null(*str_array, __func__))
+    if (is_pointer_null(dstr_array, __func__)
+        || is_dstr_arr_null(*dstr_array, __func__))
     {
         return;
     }
 
-    for (int64_t i = 0; i < (*str_array)->size; i++)
+    for (int64_t i = 0; i < (*dstr_array)->size; i++)
     {
-        str_free(&(*str_array)->data_set[i]);
+        dstr_free(&(*dstr_array)->data_set[i]);
     }
 
-    free_mem((*str_array)->data_set, (size_t)(*str_array)->size * sizeof(string_t*));
-    free_mem(*str_array, sizeof(string_array_t));
-    *str_array = NULL;
+    free_mem((*dstr_array)->data_set, (size_t)(*dstr_array)->size * sizeof(dstr_t*));
+    free_mem(*dstr_array, sizeof(dstr_arr_t));
+    *dstr_array = NULL;
 }

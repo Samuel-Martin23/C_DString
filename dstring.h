@@ -12,84 +12,84 @@
 
 #define STR_MAX_CHARS           100000
 
-typedef struct string string_t;
-typedef struct string_array string_array_t;
+typedef struct dstr dstr_t;
+typedef struct dstr_arr dstr_arr_t;
 
 int64_t prompt(const char *output_message, char *input, const int64_t MAX_SIZE);
 /*
 int scanf_flush(const char *format, ...);
 
-void str_set_size(string_t *str, int64_t size);
-void str_set_capacity(string_t *str, int64_t capacity);
-void str_set_literal(string_t *str, char *data);
+void dstr_set_size(dstr_t *str, int64_t size);
+void dstr_set_capacity(dstr_t *str, int64_t capacity);
+void dstr_set_literal(dstr_t *str, char *data);
 */
-int64_t str_get_size(string_t *str);
-int64_t str_get_capacity(string_t *str);
-char *str_get_literal(string_t *str);
+int64_t dstr_get_size(dstr_t *dstr);
+int64_t dstr_get_capacity(dstr_t *dstr);
+char *dstr_get_literal(dstr_t *dstr);
 
-string_t *str_alloc(const char *data);
-string_t *str_alloc_va(int64_t size, ...);
-void str_append(string_t *str, const char *data);
-void str_append_va(string_t *str, int64_t size, ...);
-string_t *str_add(string_t *curr_str, string_t *newest_str);
-string_t *str_add_va(int64_t size, ...);
-void str_add_equals(string_t *curr_str, string_t *newest_str);
-void str_add_equals_va(string_t *str, int64_t size, ...);
-void str_before(string_t *str, const char *data);
-string_t *str_alloc_substr(string_t *str, int64_t *start_opt, int64_t *end_opt, int64_t *step_opt);
-string_t *str_alloc_c_substr(const char *data, int64_t *start_opt, int64_t *end_opt, int64_t *step_opt);
-void str_replace(string_t *str, const char *old_c_str, const char *new_c_str);
-void str_replace_count(string_t *str, const char *old_c_str, const char *new_c_str, int64_t count);
-void str_erase(string_t *str, const char *data);
-void str_erase_count(string_t *str, const char *data, int64_t count);
-void str_erase_index(string_t *str, int64_t start, int64_t end);
-int64_t str_find(string_t *str, const char *search_val);
-int64_t str_count(string_t *str, const char *search_val, int64_t start, int64_t end);
-void str_lstrip(string_t *str, const char *characters);
-void str_rstrip(string_t *str, const char *characters);
-void str_strip(string_t *str);
-void str_strip_chars(string_t *str, const char *characters);
-void str_upper(string_t *str);
-void str_lower(string_t *str);
-void str_swapcase(string_t *str);
-void str_capitalize(string_t *str);
-void str_title(string_t *str);
-string_t *str_alloc_read_keyboard(const char *output_message);
-string_t *str_alloc_read_file(const char *path, const char *mode);
-void str_write_file(string_t *str, const char *path, const char *mode);
-string_t *str_alloc_sys_output(const char *cmd);
-int64_t str_ascii_total(string_t *str);
-int64_t c_str_ascii_total(const char *data);
-int64_t str_ll(string_t *str);
-double str_double(string_t *str);
-string_t *str_alloc_ll_to_binary_str(int64_t number, int64_t bits_shown);
-string_t *str_alloc_c_str_to_binary_str(const char *number, int64_t bits_shown);
-string_t *str_alloc_str_to_binary_str(string_t *str, int64_t bits_shown);
-string_t *str_alloc_ll_to_str(int64_t number);
-char *c_str_alloc(const char *data);
-string_t *str_alloc_copy(string_t *str);
-void str_print(string_t *str, const char *beginning, const char *end);
-void c_str_free(char **curr);
-void str_free(string_t **str);
+dstr_t *dstr_alloc(const char *data);
+dstr_t *dstr_alloc_va(int64_t size, ...);
+void dstr_append(dstr_t *dstr, const char *data);
+void dstr_append_va(dstr_t *dstr, int64_t size, ...);
+dstr_t *dstr_add(dstr_t *curr_dstr, dstr_t *newest_dstr);
+dstr_t *dstr_add_va(int64_t size, ...);
+void dstr_add_equals(dstr_t *curr_dstr, dstr_t *newest_dstr);
+void dstr_add_equals_va(dstr_t *str, int64_t size, ...);
+void dstr_before(dstr_t *dstr, const char *data);
+dstr_t *dstr_alloc_substr(const char *data, int64_t *start_opt, int64_t *end_opt, int64_t *step_opt);
+dstr_t *dstr_alloc_subdstr(dstr_t *dstr, int64_t *start_opt, int64_t *end_opt, int64_t *step_opt);
+void dstr_replace(dstr_t *dstr, const char *old_str, const char *new_str);
+void dstr_replace_count(dstr_t *dstr, const char *old_str, const char *new_str, int64_t count);
+void dstr_erase(dstr_t *dstr, const char *data);
+void dstr_erase_count(dstr_t *dstr, const char *data, int64_t count);
+void dstr_erase_index(dstr_t *dstr, int64_t start, int64_t end);
+int64_t dstr_find(dstr_t *dstr, const char *search_val);
+int64_t dstr_count(dstr_t *dstr, const char *search_val, int64_t start, int64_t end);
+void dstr_lstrip(dstr_t *dstr, const char *characters);
+void dstr_rstrip(dstr_t *dstr, const char *characters);
+void dstr_strip(dstr_t *dstr);
+void dstr_strip_chars(dstr_t *dstr, const char *characters);
+void dstr_upper(dstr_t *dstr);
+void dstr_lower(dstr_t *dstr);
+void dstr_swapcase(dstr_t *dstr);
+void dstr_capitalize(dstr_t *dstr);
+void dstr_title(dstr_t *dstr);
+dstr_t *dstr_alloc_read_keyboard(const char *output_message);
+dstr_t *dstr_alloc_read_file(const char *path, const char *mode);
+void dstr_write_file(dstr_t *dstr, const char *path, const char *mode);
+dstr_t *dstr_alloc_sys_output(const char *cmd);
+int64_t dstr_ascii_total(dstr_t *dstr);
+int64_t str_ascii_total(const char *data);
+int64_t dstr_ll(dstr_t *dstr);
+double dstr_double(dstr_t *dstr);
+dstr_t *dstr_alloc_ll_to_dstr(int64_t number);
+dstr_t *dstr_alloc_ll_to_binary_dstr(int64_t number, int64_t bits_shown);
+dstr_t *dstr_alloc_str_to_binary_dstr(const char *number, int64_t bits_shown);
+dstr_t *dstr_alloc_dstr_to_binary_dstr(dstr_t *dstr, int64_t bits_shown);
+char *str_alloc(const char *data);
+dstr_t *dstr_alloc_copy(dstr_t *dstr);
+void dstr_print(dstr_t *dstr, const char *beginning, const char *end);
+void str_free(char **curr);
+void dstr_free(dstr_t **dstr);
 
 /*
-void sa_set_size(string_array_t *str_array, int64_t size);
-void sa_set_index(string_array_t *str_array, int64_t index, string_t *str);
+void sa_set_size(dstr_arr_t *dstr_array, int64_t size);
+void sa_set_index(dstr_arr_t *dstr_array, int64_t index, dstr_t *str);
 */
-void str_array_set_str(string_array_t *str_array, int64_t index, string_t *input);
-void str_array_set_c_str(string_array_t *str_array, int64_t index, const char *data);
-int64_t str_array_get_size(string_array_t *str_array);
-string_t *str_array_get_index(string_array_t *str_array, int64_t index);
+void dstr_arr_set(dstr_arr_t *dstr_array, int64_t index, const char *data);
+void dstr_arr_set_dstr(dstr_arr_t *dstr_array, int64_t index, dstr_t *dstr_input);
+int64_t dstr_arr_get_size(dstr_arr_t *dstr_array);
+dstr_t *dstr_arr_get_index(dstr_arr_t *dstr_array, int64_t index);
 
-string_array_t *str_array_alloc(int64_t size);
-string_array_t *str_array_alloc_strs(int64_t size, ...);
-string_array_t *str_array_alloc_c_strs(int64_t size, ...);
-string_array_t *str_alloc_split(string_t *str, const char *separator, int64_t max_split);
-string_array_t *str_alloc_c_str_split(const char *data, const char *separator, int64_t max_split);
-string_array_t *str_array_alloc_read_keyboard(int64_t size, ...);
-bool str_array_cmp(string_array_t *str_array, int64_t index, string_t *str);
-bool str_array_cmp_c_str(string_array_t *str_array, int64_t index, const char *data);
-void str_array_print(string_array_t *str_array, const char *beginning, const char *end);
-void str_array_free(string_array_t **str_array);
+dstr_arr_t *dstr_arr_alloc(int64_t size);
+dstr_arr_t *dstr_arr_alloc_strs(int64_t size, ...);
+dstr_arr_t *dstr_arr_alloc_dstrs(int64_t size, ...);
+dstr_arr_t *dstr_alloc_split_str(const char *data, const char *separator, int64_t max_split);
+dstr_arr_t *dstr_alloc_split_dstr(dstr_t *dstr, const char *separator, int64_t max_split);
+dstr_arr_t *dstr_arr_alloc_read_keyboard(int64_t size, ...);
+bool dstr_arr_cmp(dstr_arr_t *dstr_array, int64_t index, const char *data);
+bool dstr_arr_cmp_dstr(dstr_arr_t *dstr_array, int64_t index, dstr_t *dstr);
+void dstr_arr_print(dstr_arr_t *dstr_array, const char *beginning, const char *end);
+void dstr_arr_free(dstr_arr_t **dstr_array);
 
 #endif /* DSTRING_H */
