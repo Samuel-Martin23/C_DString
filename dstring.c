@@ -495,6 +495,7 @@ int64_t prompt(const char *output_message, char *input, const int64_t MAX_SIZE)
     return i;
 }
 
+/*
 int scanf_flush(const char *format, ...)
 {
     va_list args;
@@ -511,7 +512,6 @@ int scanf_flush(const char *format, ...)
     return result;
 }
 
-/*
 void str_set_size(string_t *str, int64_t size)
 {
     if (check_warnings(str, STR_NULL, __func__))

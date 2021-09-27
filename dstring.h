@@ -16,9 +16,9 @@ typedef struct string string_t;
 typedef struct string_array string_array_t;
 
 int64_t prompt(const char *output_message, char *input, const int64_t MAX_SIZE);
+/*
 int scanf_flush(const char *format, ...);
 
-/*
 void str_set_size(string_t *str, int64_t size);
 void str_set_capacity(string_t *str, int64_t capacity);
 void str_set_literal(string_t *str, char *data);
