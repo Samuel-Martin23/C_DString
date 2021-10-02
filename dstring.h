@@ -9,14 +9,10 @@
 #include <math.h>
 #include <stdarg.h>
 #include "../C_Allocation_Metrics/allocation_metrics.h"
+#include "../C_Prompt/prompt.h"
 
 typedef struct dstr dstr_t;
 typedef struct dstr_arr dstr_arr_t;
-
-int64_t prompt(const char *output_message, char *input, const int64_t MAX_SIZE);
-/*
-int scanf_flush(const char *format, ...);
-*/
 
 char *str_alloc(const char *data);
 int64_t str_ascii_total(const char *data);

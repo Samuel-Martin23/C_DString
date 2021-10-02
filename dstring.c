@@ -465,55 +465,6 @@ static dstr_t *alloc_setup_capacity(int64_t file_size)
     return dstr;
 }
 
-int64_t prompt(const char *output_message, char *input, const int64_t MAX_SIZE)
-{   
-    if (is_size_less_or_zero(MAX_SIZE, __func__))
-    {
-        return -1;
-    }
-
-    printf("%s", output_message);
-
-    int64_t i = 0;
-    int ch = 0;
-
-    while (true)
-    {
-        ch = getchar();
-
-        if (ch == '\n' || ch == EOF)
-        {
-            break;
-        }
-        else if (i < (MAX_SIZE - 1))
-        {
-            input[i++] = (char)ch;
-        }
-    }
-
-    input[i] = '\0';
-
-    return i;
-}
-
-/*
-int scanf_flush(const char *format, ...)
-{
-    va_list args;
-    int result = 0;
-
-    va_start(args, format);
-    result = vscanf(format, args);
-    va_end(args);
-
-    // Flushes the buffer.
-    char ch = '\0';
-    while ((ch = (char)getchar()) != '\n' && ch != EOF);
-
-    return result;
-}
-*/
-
 char *str_alloc(const char *data)
 {
     if (is_str_null(data, __func__))
@@ -1137,7 +1088,7 @@ dstr_t *dstr_alloc_read_keyboard(const char *output_message)
     char input[STR_MAX_CHARS];
     dstr_t *dstr = alloc_mem(sizeof(dstr_t));
 
-    dstr->size = prompt(output_message, input, STR_MAX_CHARS);
+    dstr->size = (int64_t)prompt(output_message, "%s", input, sizeof(input));
     dstr->capacity = calculate_capacity(dstr->size);
     dstr->data = alloc_mem(sizeof(char) * (size_t)(dstr->capacity + 1));
 
