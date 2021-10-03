@@ -238,7 +238,7 @@ static size_t count_occurrences_in_str(const char *data, const char *search_val,
     char *data_alloc = strdup(data);
     char *data_copy = data_alloc;
 
-    mem_usage.allocated += sizeof(char) * (data_size + 1);
+    add_to_allocated(sizeof(char) * (data_size + 1));
 
     data_copy = &data_copy[start];
     data_copy[end-start] = '\0';
@@ -294,7 +294,7 @@ static dstr_arr_t *alloc_split_str(const char *data, size_t size, const char *se
     char *data_copy = data_alloc;
     size_t num_of_occurrences = count_occurrences_in_str(data_copy, separator, max_split, 0, size);
 
-    mem_usage.allocated += sizeof(char) * (size + 1);
+    add_to_allocated(sizeof(char) * (size + 1));
 
     dstr_arr_t *dstr_array = alloc_mem(sizeof(dstr_arr_t));
     dstr_array->size = num_of_occurrences + 1;
@@ -429,7 +429,7 @@ static size_t str_realloc_capacity(dstr_t *dstr, const char *data)
         dstr->capacity = update_capacity(dstr->size, dstr->capacity);
         dstr->data = realloc(dstr->data, sizeof(char) * (dstr->capacity + 1));
 
-        mem_usage.allocated += (u_int32_t)(sizeof(char) * (dstr->capacity - old_capacity));
+        add_to_allocated(sizeof(char) * (dstr->capacity - old_capacity));
     }
 
     return data_size;
@@ -451,17 +451,6 @@ static dstr_t *alloc_setup_capacity(size_t file_size)
     return dstr;
 }
 
-char *str_alloc(const char *data)
-{
-    if (is_str_null(data, __func__))
-    {
-        return NULL;
-    }
-
-    mem_usage.allocated += sizeof(char) * (strlen(data) + 1);
-    return strdup(data);
-}
-
 size_t str_ascii_total(const char *data)
 {
     if (is_not_valid_str(data, __func__))
@@ -478,18 +467,6 @@ size_t str_ascii_total(const char *data)
     }
 
     return ascii_total;
-}
-
-void str_free(char **data)
-{
-    if (is_pointer_null(data, __func__) || 
-        is_str_null(*data, __func__))
-    {
-        return;
-    }
-
-    free_mem(*data, sizeof(char) * (strlen(*data)+1));
-    *data = NULL;
 }
 
 /*

@@ -14,9 +14,7 @@
 typedef struct dstr dstr_t;
 typedef struct dstr_arr dstr_arr_t;
 
-char *str_alloc(const char *data);
 size_t str_ascii_total(const char *data);
-void str_free(char **curr);
 
 /*
 void dstr_set_size(dstr_t *str, int64_t size);
