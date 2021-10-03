@@ -21,11 +21,11 @@ typedef struct dstr_arr
     dstr_t **data_set;
 } dstr_arr_t;
 
-static bool is_dstr_null(dstr_t *dstr, const char *function_name)
+static bool is_dstr_null(dstr_t *dstr, const char *func_name)
 {
     if (dstr == NULL)
     {
-        printf("%s: %swarning:%s dstring is NULL%s\n", function_name, PURPLE, WHITE, RESET);
+        printf("%s: %swarning:%s dstr is NULL%s\n", func_name, PURPLE, WHITE, RESET);
         return true;
     }
 
@@ -62,7 +62,7 @@ static bool is_dstr_arr_null(dstr_arr_t *dstr_array, const char *func_name)
 
     if (is_null)
     {
-        printf("%s: %swarning:%s dstring_array is NULL%s\n", func_name, PURPLE, WHITE, RESET);
+        printf("%s: %swarning:%s dstr_arr is NULL%s\n", func_name, PURPLE, WHITE, RESET);
     }
 
     return is_null;
@@ -92,8 +92,10 @@ static bool is_pointer_null(void *data, const char *func_name)
     return is_not_valid_pointer;
 }
 
-static bool check_index(int64_t *index, size_t size, const char *function_name)
+static bool check_index(int64_t *index, size_t size, const char *func_name)
 {
+    int64_t index_copy = *index;
+
     if (*index < 0)
     {
         *index += size;
@@ -101,20 +103,20 @@ static bool check_index(int64_t *index, size_t size, const char *function_name)
 
     if (*index < 0 || *index >= (int64_t)size)
     {
-        printf("%s: %swarning:%s index %lld is out of range%s\n", function_name, PURPLE, WHITE, *index, RESET);
+        printf("%s: %swarning:%s index %lld is out of range%s\n", func_name, PURPLE, WHITE, index_copy, RESET);
         return true;
     }
 
     return false;
 }
 
-static bool check_ranges(int64_t *start, int64_t *end, size_t size, const char *function_name)
+static bool check_ranges(int64_t *start, int64_t *end, size_t size, const char *func_name)
 {
     int64_t size_copy = (int64_t)size;
 
     if (*start >= size_copy || *end > size_copy)
     {
-        printf("%s: %swarning:%s indices are out of range%s\n", function_name, PURPLE, WHITE, RESET);
+        printf("%s: %swarning:%s indices are out of range%s\n", func_name, PURPLE, WHITE, RESET);
         return true;
     }
 
@@ -134,7 +136,7 @@ static bool check_ranges(int64_t *start, int64_t *end, size_t size, const char *
 
     if (*start < 0 || *end > size_copy || (*end - *start) <= 0)
     {
-        printf("%s: %swarning:%s indices are out of range%s\n", function_name, PURPLE, WHITE, RESET);
+        printf("%s: %swarning:%s indices are out of range%s\n", func_name, PURPLE, WHITE, RESET);
         return true;
     }
 
@@ -225,26 +227,6 @@ static size_t ceil_lu(size_t x, size_t y)
     return (size_t)ceil(x / (double)y);
 }
 
-static bool check_str_occurrences(const char *characters, char value)
-{
-    if (value == '\0')
-    {
-        return false;
-    }
-
-    while (*characters != '\0')
-    {
-        if (*characters == value)
-        {
-            return true;
-        }
-
-        characters++;
-    }
-
-    return false;
-}
-
 static size_t count_occurrences_in_str(const char *data, const char *search_val, size_t count, size_t start, size_t end)
 {
     if (*search_val == '\0')
@@ -312,11 +294,11 @@ static dstr_arr_t *alloc_split_str(const char *data, size_t size, const char *se
     char *data_copy = data_alloc;
     size_t num_of_occurrences = count_occurrences_in_str(data_copy, separator, max_split, 0, size);
 
-    mem_usage.allocated += sizeof(char) * (size_t)(size + 1);
+    mem_usage.allocated += sizeof(char) * (size + 1);
 
     dstr_arr_t *dstr_array = alloc_mem(sizeof(dstr_arr_t));
     dstr_array->size = num_of_occurrences + 1;
-    dstr_array->data_set = alloc_mem((size_t)dstr_array->size * sizeof(dstr_t*));
+    dstr_array->data_set = alloc_mem(dstr_array->size * sizeof(dstr_t*));
 
     while (i < num_of_occurrences)
     {
@@ -326,7 +308,7 @@ static dstr_arr_t *alloc_split_str(const char *data, size_t size, const char *se
     }
 
     dstr_array->data_set[i] = dstr_alloc(data_copy);
-    free_mem(data_alloc, sizeof(char) * (size_t)(size + 1));
+    free_mem(data_alloc, sizeof(char) * (size + 1));
 
     return dstr_array;
 }
@@ -350,11 +332,11 @@ static void set_empty_dstr(dstr_t *dstr)
 {
     dstr->size = 0;
     dstr->capacity = DEFAULT_CAPACITY;
-    dstr->data = alloc_mem(sizeof(char) * (size_t)(dstr->capacity + 1));
+    dstr->data = alloc_mem(sizeof(char) * (dstr->capacity + 1));
     dstr->data[0] = '\0';
 }
 
-static dstr_t *alloc_substr(const char *data, size_t data_size, int64_t *start_opt, int64_t *end_opt, int64_t *step_opt, const char *function_name)
+static dstr_t *alloc_substr(const char *data, size_t data_size, int64_t *start_opt, int64_t *end_opt, int64_t *step_opt, const char *func_name)
 {
     if (is_size_zero(data_size, __func__))
     {
@@ -369,7 +351,7 @@ static dstr_t *alloc_substr(const char *data, size_t data_size, int64_t *start_o
     }
     else if (*step_opt == 0)
     {
-        printf("%s: %swarning:%s slice step cannot be equal to zero%s\n", function_name, PURPLE, WHITE, RESET);
+        printf("%s: %swarning:%s slice step cannot be equal to zero%s\n", func_name, PURPLE, WHITE, RESET);
         return NULL;
     }
     else
@@ -393,7 +375,7 @@ static dstr_t *alloc_substr(const char *data, size_t data_size, int64_t *start_o
 
     dsub_str->size = (abs_step >= size) ? 1 : ceil_lu(size, abs_step);
     dsub_str->capacity = calculate_capacity(dsub_str->size);
-    dsub_str->data = alloc_mem(sizeof(char) * (size_t)(dsub_str->capacity + 1));
+    dsub_str->data = alloc_mem(sizeof(char) * (dsub_str->capacity + 1));
 
     for (size_t i = 0; i < dsub_str->size; i++)
     {
@@ -455,7 +437,7 @@ static size_t str_realloc_capacity(dstr_t *dstr, const char *data)
 
 static void dstr_data_free(dstr_t *dstr)
 {
-    free_mem(dstr->data, sizeof(char) * (size_t)(dstr->capacity + 1));
+    free_mem(dstr->data, sizeof(char) * (dstr->capacity + 1));
 }
 
 static dstr_t *alloc_setup_capacity(size_t file_size)
@@ -464,7 +446,7 @@ static dstr_t *alloc_setup_capacity(size_t file_size)
 
     dstr->size = file_size;
     dstr->capacity = calculate_capacity(file_size);
-    dstr->data = alloc_mem(sizeof(char) * (size_t)(dstr->capacity + 1));
+    dstr->data = alloc_mem(sizeof(char) * (dstr->capacity + 1));
 
     return dstr;
 }
@@ -597,7 +579,7 @@ dstr_t *dstr_alloc(const char *data)
 
     dstr->size = strlen(data);
     dstr->capacity = calculate_capacity(dstr->size);
-    dstr->data = alloc_mem(sizeof(char) * (size_t)(dstr->capacity + 1));
+    dstr->data = alloc_mem(sizeof(char) * (dstr->capacity + 1));
 
     memcpy(dstr->data, data, dstr->size + 1);
 
@@ -881,7 +863,13 @@ size_t dstr_find(dstr_t *dstr, const char *search_val)
 
     char *found = strstr(dstr->data, search_val);
 
-    return found ? (size_t)(found - dstr->data) : 0;
+    if (found == NULL)
+    {
+        printf("%s: %swarning:%s could not find the searched string%s\n", __func__, PURPLE, WHITE, RESET);
+        return 0;
+    }
+
+    return (size_t)(found - dstr->data);
 }
 
 size_t dstr_count(dstr_t *dstr, const char *search_val, int64_t start, int64_t end)
@@ -906,7 +894,7 @@ void dstr_lstrip(dstr_t *dstr, const char *characters)
 
     char *copy = dstr->data;
 
-    while (check_str_occurrences(characters, *copy))
+    while (strchr(characters, *copy))
     {
         copy++;
     }
@@ -919,7 +907,7 @@ void dstr_lstrip(dstr_t *dstr, const char *characters)
     {
         size_t striped_size = dstr->size - (size_t)(copy - dstr->data);
         size_t capacity = calculate_capacity(striped_size);
-        char *striped = alloc_mem(sizeof(char) * (size_t)(capacity + 1));
+        char *striped = alloc_mem(sizeof(char) * (capacity + 1));
 
         memcpy(striped, copy, striped_size + 1);
         dstr_data_free(dstr);
@@ -945,7 +933,7 @@ void dstr_rstrip(dstr_t *dstr, const char *characters)
 
     char *forward = dstr->data + dstr->size;
 
-    while (check_str_occurrences(characters, (*(forward-1))))
+    while (strchr(characters, (*(forward-1))))
     {
         forward--;
     }
@@ -958,7 +946,7 @@ void dstr_rstrip(dstr_t *dstr, const char *characters)
     {
         size_t striped_size = (size_t)(forward - dstr->data);
         size_t capacity = calculate_capacity(striped_size);
-        char *striped = alloc_mem(sizeof(char) * (size_t)(capacity + 1));
+        char *striped = alloc_mem(sizeof(char) * (capacity + 1));
 
         memcpy(striped, dstr->data, striped_size);
         dstr_data_free(dstr);
@@ -1086,7 +1074,7 @@ dstr_t *dstr_alloc_read_keyboard(const char *output_message)
 
     dstr->size = prompt(output_message, "%s", input, sizeof(input));
     dstr->capacity = calculate_capacity(dstr->size);
-    dstr->data = alloc_mem(sizeof(char) * (size_t)(dstr->capacity + 1));
+    dstr->data = alloc_mem(sizeof(char) * (dstr->capacity + 1));
 
     memcpy(dstr->data, input, dstr->size + 1);
 
@@ -1155,7 +1143,7 @@ void str_write_file(dstr_t *dstr, const char *path, const char *mode)
 
     if (strstr(mode, "b"))
     {
-        fwrite(dstr->data, (size_t)dstr->size + 1, 1, fp);
+        fwrite(dstr->data, dstr->size + 1, 1, fp);
     }
     else
     {
@@ -1428,7 +1416,7 @@ dstr_arr_t *dstr_arr_alloc_dstrs(size_t size, ...)
 
     dstr_arr_t *dstr_array = alloc_mem(sizeof(dstr_arr_t));
     dstr_array->size = size;
-    dstr_array->data_set = alloc_mem((size_t)dstr_array->size * sizeof(dstr_t*));
+    dstr_array->data_set = alloc_mem(dstr_array->size * sizeof(dstr_t*));
 
     va_list args;
     va_start(args, size);
@@ -1546,7 +1534,7 @@ void dstr_arr_free(dstr_arr_t **dstr_array)
         dstr_free(&(*dstr_array)->data_set[i]);
     }
 
-    free_mem((*dstr_array)->data_set, (size_t)(*dstr_array)->size * sizeof(dstr_t*));
+    free_mem((*dstr_array)->data_set, (*dstr_array)->size * sizeof(dstr_t*));
     free_mem(*dstr_array, sizeof(dstr_arr_t));
     *dstr_array = NULL;
 }
