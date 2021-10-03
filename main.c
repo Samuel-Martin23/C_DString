@@ -10,7 +10,7 @@ int main()
     dstr_t *last_name = dstr_alloc_subdstr(full_name, &start, 0, 0);
 
     dstr_erase(full_name, "tin");
-    dstr_arr_t *split_name = dstr_alloc_split_dstr(full_name, "a", 0);
+    dstr_arr_t *split_name = dstr_alloc_splitdstr(full_name, "a", 0);
 
     dstr_free(&last_name);
     dstr_free(&full_name);
