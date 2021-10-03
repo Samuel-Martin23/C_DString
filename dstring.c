@@ -1408,7 +1408,7 @@ dstr_arr_t *dstr_arr_alloc_dstrs(size_t size, ...)
     return dstr_array;
 }
 
-dstr_arr_t *dstr_alloc_split_str(const char *data, const char *separator, size_t max_split)
+dstr_arr_t *dstr_alloc_splitstr(const char *data, const char *separator, size_t max_split)
 {
     if (is_not_valid_str(data, __func__)
         || is_not_valid_str(separator, __func__))
@@ -1419,7 +1419,7 @@ dstr_arr_t *dstr_alloc_split_str(const char *data, const char *separator, size_t
     return alloc_split_str(data, strlen(data), separator, max_split);
 }
 
-dstr_arr_t *dstr_alloc_split_dstr(dstr_t *dstr, const char *separator, size_t max_split)
+dstr_arr_t *dstr_alloc_splitdstr(dstr_t *dstr, const char *separator, size_t max_split)
 {
     if (is_dstr_null(dstr, __func__)
         || is_not_valid_str(separator, __func__))
