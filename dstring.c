@@ -289,7 +289,6 @@ static dstr_t *alloc_read_file_content(FILE *fp)
 static dstr_arr_t *alloc_split_str(const char *data, size_t size, const char *separator, size_t max_split)
 {
     size_t i = 0;
-    char *split = NULL;
     char *data_alloc = strdup(data);
     char *data_copy = data_alloc;
     size_t num_of_occurrences = count_occurrences_in_str(data_copy, separator, max_split, 0, size);
@@ -302,8 +301,7 @@ static dstr_arr_t *alloc_split_str(const char *data, size_t size, const char *se
 
     while (i < num_of_occurrences)
     {
-        split = strsep_m(&data_copy, separator);
-        dstr_array->data_set[i] = dstr_alloc(split);
+        dstr_array->data_set[i] = dstr_alloc(strsep_m(&data_copy, separator));
         i++;
     }
 
