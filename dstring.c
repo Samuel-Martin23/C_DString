@@ -167,16 +167,38 @@ static char *strsep_m(char **data, const char *separator)
 
 static int64_t get_start_index(int64_t *start_opt, size_t size, bool is_step_neg)
 {
+    int64_t size_cast = (int64_t)size;
+
     if (start_opt == NULL)
     {
-        return is_step_neg ? (int64_t)(size - 1) : 0;
+        return is_step_neg ? (size_cast - 1) : 0;
     }
 
     int64_t start = *start_opt;
 
+    // If start is negative, then add the size of str to start.
+    // So if start == -3 and the size is 10, 
+    // you will start at 7.
     if (start < 0)
     {
-        start += size;
+        start += size_cast;
+    }
+
+    if (start >= size_cast)
+    {
+        // Returning -1 here means something went wrong.
+        // I can't set it to zero, so -1 it is. This will get checked in get_sub_size.
+        // This is a little bit confusing cause in get_end_index,
+        // return -1 is actually something we want to happen and is a good thing.
+        return -1;
+    }
+
+    // If the start value is less than the size of the str,
+    // return 0. This might be the case if the start value is a
+    // a negative number even after the size has been added to it.
+    if (start < size_cast)
+    {
+        return 0;
     }
 
     return start;
@@ -184,22 +206,38 @@ static int64_t get_start_index(int64_t *start_opt, size_t size, bool is_step_neg
 
 static int64_t get_end_index(int64_t *end_opt, size_t size, bool is_step_neg)
 {
-    int64_t size_copy = (int64_t)size;
+    int64_t size_cast = (int64_t)size;
 
     if (end_opt == NULL)
     {
-        return is_step_neg ? -1 : size_copy;
+        // If you are going through each index in the string,
+        // you need to get str[0] too so we have to return -1.
+        return is_step_neg ? -1 : size_cast;
     }
 
     int64_t end = *end_opt;
 
+    // If end is negative, then add the size of str to end.
+    // So if end == -1 and the size is 10, 
+    // you will get 9, the last index of your str.
     if (end < 0)
     {
-        end += size_copy;
+        end += size_cast;
     }
-    else if (end > size_copy)
+
+    // If the end value is larger than the size of the str,
+    // set end to the size of str.
+    if (end > size_cast)
     {
-        end = size_copy;
+        end = size_cast;
+    }
+
+    // If the end value is less than the size of the str,
+    // return -1. This might be the case if the end value is a
+    // a negative number even after the size has been added to it.
+    if (end < size_cast)
+    {
+        return -1;
     }
 
     return end;
@@ -214,7 +252,7 @@ static size_t get_sub_size(int64_t start, int64_t end, bool is_step_neg)
 
     size_t sub_str_size = is_step_neg ? (size_t)(start - end) : (size_t)(end - start);
 
-    if (sub_str_size == 0)
+    if (sub_str_size <= 0)
     {
         return 0;
     }
@@ -363,7 +401,7 @@ static dstr_t *alloc_substr(const char *data, size_t data_size, int64_t *start_o
     size_t size = get_sub_size(start, end, is_step_neg);
     dstr_t *dsub_str = alloc_mem(sizeof(dstr_t));
 
-    if (size == 0 || start >= (int64_t)data_size)
+    if (size == 0)
     {
         set_empty_dstr(dsub_str);
         return dsub_str;
@@ -959,6 +997,16 @@ void dstr_strip_chars(dstr_t *dstr, const char *characters)
 
     dstr_lstrip(dstr, characters);
     dstr_rstrip(dstr, characters);
+}
+
+char dstr_char_at(dstr_t *dstr, int64_t index)
+{
+    if (check_index(&index, dstr->size, __func__))
+    {
+        return '\0';
+    }
+
+    return dstr->data[index];
 }
 
 void dstr_upper(dstr_t *dstr)

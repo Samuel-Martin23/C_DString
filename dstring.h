@@ -47,6 +47,7 @@ void dstr_lstrip(dstr_t *dstr, const char *characters);
 void dstr_rstrip(dstr_t *dstr, const char *characters);
 void dstr_strip(dstr_t *dstr);
 void dstr_strip_chars(dstr_t *dstr, const char *characters);
+char dstr_char_at(dstr_t *dstr, int64_t index);
 void dstr_upper(dstr_t *dstr);
 void dstr_lower(dstr_t *dstr);
 void dstr_swapcase(dstr_t *dstr);
