@@ -176,6 +176,11 @@ static int64_t get_start_index(int64_t *start_opt, size_t size, bool is_step_neg
 
     int64_t start = *start_opt;
 
+    if (start > 0 && start >= size_cast)
+    {
+        return (size_cast - 1);
+    }
+
     // If start is negative, then add the size of str to start.
     // So if start == -3 and the size is 10, 
     // you will start at 7.
@@ -196,7 +201,7 @@ static int64_t get_start_index(int64_t *start_opt, size_t size, bool is_step_neg
     // If the start value is less than the size of the str,
     // return 0. This might be the case if the start value is a
     // a negative number even after the size has been added to it.
-    if (start < size_cast)
+    if (start < 0 && start < size_cast)
     {
         return 0;
     }
@@ -235,7 +240,7 @@ static int64_t get_end_index(int64_t *end_opt, size_t size, bool is_step_neg)
     // If the end value is less than the size of the str,
     // return -1. This might be the case if the end value is a
     // a negative number even after the size has been added to it.
-    if (end < size_cast)
+    if (end < 0 && end < size_cast)
     {
         return -1;
     }
