@@ -264,7 +264,7 @@ static size_t get_sub_size(int64_t start, int64_t end, bool is_step_neg)
 
     size_t sub_str_size = is_step_neg ? (size_t)(start - end) : (size_t)(end - start);
 
-    if (sub_str_size <= 0)
+    if (sub_str_size == 0)
     {
         return 0;
     }
