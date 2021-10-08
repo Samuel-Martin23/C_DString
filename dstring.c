@@ -1013,7 +1013,8 @@ void dstr_strip_chars(dstr_t *dstr, const char *characters)
 
 char dstr_char_at(dstr_t *dstr, int64_t index)
 {
-    if (check_index(&index, dstr->size, __func__))
+    if (is_dstr_null(dstr, __func__)
+        ||check_index(&index, dstr->size, __func__))
     {
         return '\0';
     }
@@ -1097,7 +1098,7 @@ void dstr_title(dstr_t *dstr)
     }
 }
 
-dstr_t *dstr_alloc_read_keyboard(const char *output_message)
+dstr_t *dstr_alloc_prompt(const char *output_message)
 {
     if (is_str_null(output_message, __func__))
     {
@@ -1488,7 +1489,7 @@ dstr_arr_t *dstr_alloc_splitdstr(dstr_t *dstr, const char *separator, size_t max
     return alloc_split_str(dstr->data, dstr->size, separator, max_split);
 }
 
-dstr_arr_t *dstr_arr_alloc_read_keyboard(size_t size, ...)
+dstr_arr_t *dstr_arr_alloc_prompt(size_t size, ...)
 {
     if (is_size_zero(size, __func__))
     {
@@ -1502,7 +1503,7 @@ dstr_arr_t *dstr_arr_alloc_read_keyboard(size_t size, ...)
 
     for (size_t i = 0; i < dstr_array->size; i++)
     {
-        dstr_arr_set_dstr(dstr_array, (int64_t)i, dstr_alloc_read_keyboard(va_arg(args, char*)));
+        dstr_arr_set_dstr(dstr_array, (int64_t)i, dstr_alloc_prompt(va_arg(args, char*)));
     }
 
     va_end(args);
