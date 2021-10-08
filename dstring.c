@@ -176,9 +176,9 @@ static int64_t get_start_index(int64_t *start_opt, size_t size, bool is_step_neg
 
     int64_t start = *start_opt;
 
-    if (start > 0 && start >= size_cast)
+    if (start >= size_cast)
     {
-        return (size_cast - 1);
+        return is_step_neg ? (size_cast - 1) : size_cast;
     }
 
     // If start is negative, then add the size of str to start.
@@ -209,7 +209,7 @@ static int64_t get_start_index(int64_t *start_opt, size_t size, bool is_step_neg
     return start;
 }
 
-static int64_t get_end_index(int64_t *end_opt, size_t size, bool is_step_neg)
+static int64_t get_end_index(int64_t *end_opt, size_t size, bool is_step_neg, int64_t start)
 {
     int64_t size_cast = (int64_t)size;
 
@@ -217,7 +217,14 @@ static int64_t get_end_index(int64_t *end_opt, size_t size, bool is_step_neg)
     {
         // If you are going through each index in the string,
         // you need to get str[0] too so we have to return -1.
-        return is_step_neg ? -1 : size_cast;
+        if (is_step_neg)
+        {
+            return (start == 0) ? 0 : -1;
+        }
+        else
+        {
+            return size_cast;
+        }
     }
 
     int64_t end = *end_opt;
@@ -402,7 +409,7 @@ static dstr_t *alloc_substr(const char *data, size_t data_size, int64_t *start_o
 
     bool is_step_neg = (step < 0);
     int64_t start = get_start_index(start_opt, data_size, is_step_neg);
-    int64_t end = get_end_index(end_opt, data_size, is_step_neg);
+    int64_t end = get_end_index(end_opt, data_size, is_step_neg, start);
     size_t size = get_sub_size(start, end, is_step_neg);
     dstr_t *dsub_str = alloc_mem(sizeof(dstr_t));
 
