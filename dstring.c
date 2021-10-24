@@ -143,7 +143,8 @@ static bool check_ranges(int64_t *start, int64_t *end, size_t size, const char *
     return false;
 }
 
-static char *strsep_m(char **data, const char *separator) 
+// Separates a str with a multi-character delimiter.
+static char *strsep_chars(char **data, const char *separator) 
 {
     if (*data == NULL)
     {
@@ -316,7 +317,7 @@ static size_t count_occurrences_in_str(const char *data, const char *search_val,
 
 static dstr_t *alloc_read_file_content(FILE *fp)
 {
-    char file_line[STR_MAX_CHARS];
+    char line[STR_MAX_CHARS] = {0};
     dstr_t *dstr = dstr_alloc("");
 
     if (fp == NULL) 
@@ -325,12 +326,14 @@ static dstr_t *alloc_read_file_content(FILE *fp)
         return NULL;
     }
 
-    while (!feof(fp))
+    while (prompt_getline("", line, STR_MAX_CHARS, fp) != EOF)
     {
-        if (fgets(file_line, STR_MAX_CHARS, fp) != NULL)
+        if (line[0] != '\0')
         {
-            dstr_append(dstr, file_line);
+            dstr_append(dstr, line);
         }
+
+        dstr_append(dstr, "\n");
     }
 
     return dstr;
@@ -351,7 +354,7 @@ static dstr_arr_t *alloc_split_str(const char *data, size_t size, const char *se
 
     while (i < num_of_occurrences)
     {
-        dstr_array->data_set[i] = dstr_alloc(strsep_m(&data_copy, separator));
+        dstr_array->data_set[i] = dstr_alloc(strsep_chars(&data_copy, separator));
         i++;
     }
 
@@ -465,7 +468,7 @@ static char *get_str_number(int8_t number)
     return "";
 }
 
-static size_t str_realloc_capacity(dstr_t *dstr, const char *data)
+static size_t dstr_realloc_capacity(dstr_t *dstr, const char *data)
 {
     size_t old_capacity = 0;
     size_t data_size = strlen(data);
@@ -641,7 +644,7 @@ void dstr_append(dstr_t *dstr, const char *data)
         return;
     }
 
-    size_t data_size = str_realloc_capacity(dstr, data);
+    size_t data_size = dstr_realloc_capacity(dstr, data);
 
     memcpy(&dstr->data[dstr->size - data_size], data, data_size + 1);
 }
@@ -743,7 +746,7 @@ void dstr_before(dstr_t *dstr, const char *data)
         return;
     }
 
-    size_t data_size = str_realloc_capacity(dstr, data);
+    size_t data_size = dstr_realloc_capacity(dstr, data);
 
     memcpy(&dstr->data[data_size], dstr->data, dstr->size+1);
     memcpy(dstr->data, data, data_size);
@@ -1105,10 +1108,12 @@ dstr_t *dstr_alloc_prompt(const char *output_message)
         return NULL;
     }
 
-    char input[STR_MAX_CHARS];
+    char input[STR_MAX_CHARS] = {0};
     dstr_t *dstr = alloc_mem(sizeof(dstr_t));
 
-    dstr->size = prompt(output_message, "%s", input, sizeof(input));
+    prompt_getline(output_message, input, STR_MAX_CHARS, stdin);
+
+    dstr->size = strlen(input);
     dstr->capacity = calculate_capacity(dstr->size);
     dstr->data = alloc_mem(sizeof(char) * (dstr->capacity + 1));
 
