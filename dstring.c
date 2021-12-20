@@ -326,7 +326,7 @@ static dstr_t *alloc_read_file_content(FILE *fp)
         return NULL;
     }
 
-    while (prompt_getline("", line, STR_MAX_CHARS, fp) != EOF)
+    while (prompt_getline_stream("", line, STR_MAX_CHARS, fp) != EOF)
     {
         if (line[0] != '\0')
         {
@@ -389,7 +389,7 @@ static void set_empty_dstr(dstr_t *dstr)
 
 static dstr_t *alloc_substr(const char *data, size_t data_size, int64_t *start_opt, int64_t *end_opt, int64_t *step_opt, const char *func_name)
 {
-    if (is_size_zero(data_size, __func__))
+    if (is_size_zero(data_size, func_name))
     {
         return NULL;
     }
@@ -1111,7 +1111,7 @@ dstr_t *dstr_alloc_prompt(const char *output_message)
     char input[STR_MAX_CHARS] = {0};
     dstr_t *dstr = alloc_mem(sizeof(dstr_t));
 
-    prompt_getline(output_message, input, STR_MAX_CHARS, stdin);
+    prompt_getline(output_message, input, STR_MAX_CHARS);
 
     dstr->size = strlen(input);
     dstr->capacity = calculate_capacity(dstr->size);
