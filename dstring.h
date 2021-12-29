@@ -36,6 +36,8 @@ void dstr_add_equals_va(dstr_t *str, size_t size, ...);
 void dstr_before(dstr_t *dstr, const char *data);
 dstr_t *dstr_alloc_substr(const char *data, int64_t *start_opt, int64_t *end_opt, int64_t *step_opt);
 dstr_t *dstr_alloc_subdstr(dstr_t *dstr, int64_t *start_opt, int64_t *end_opt, int64_t *step_opt);
+bool dstr_is_substr(const char *big, const char *little);
+bool dstr_is_subdstr(dstr_t *big, dstr_t *little);
 void dstr_replace(dstr_t *dstr, const char *old_str, const char *new_str);
 void dstr_replace_count(dstr_t *dstr, const char *old_str, const char *new_str, size_t count);
 void dstr_erase(dstr_t *dstr, const char *data);

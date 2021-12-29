@@ -772,6 +772,28 @@ dstr_t *dstr_alloc_subdstr(dstr_t *dstr, int64_t *start_opt, int64_t *end_opt, i
     return alloc_substr(dstr->data, dstr->size, start_opt, end_opt, step_opt, __func__);
 }
 
+bool dstr_is_substr(const char *big, const char *little)
+{
+    if (big == NULL || little == NULL)
+    {
+        return false;
+    }
+
+    char *result = strstr(big, little);
+
+    if (!(result))
+    {
+        return false;
+    }
+
+    return !(strncmp(little, result, strlen(little)));
+}
+
+bool dstr_is_subdstr(dstr_t *big, dstr_t *little)
+{
+    return dstr_is_substr(big->data, little->data);
+}
+
 void dstr_replace(dstr_t *dstr, const char *old_str, const char *new_str)
 {
     if (is_dstr_null(dstr, __func__)
